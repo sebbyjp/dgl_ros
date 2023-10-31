@@ -1,1 +1,1 @@
-# deep_grasp_ros
+# Deep Grasp Library for ROS
