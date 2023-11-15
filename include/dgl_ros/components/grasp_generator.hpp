@@ -26,12 +26,12 @@ public:
   * @details loads parameters, registers callbacks for the action server,
              and initializes GPD
   */
-  GraspGenerator(std::function<SampleGraspPoses::Feedback::SharedPtr()> grasp_generator);
+  GraspGenerator(std::function<SampleGraspPoses::Feedback::SharedPtr()> grasp_generator, bool& goal_active);
 
 
 private:
   rclcpp_action::CancelResponse handle_cancel(const GoalHandleSharedPtr goal_handle);
-  // void handle_accepted(const GoalHandleSharedPtr& goal_handle);
+  void handle_accepted(const GoalHandleSharedPtr& goal_handle);
 
   /**
    * @brief Called every time feedback is received for the goal
@@ -40,7 +40,7 @@ private:
 
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid,
                                           std::shared_ptr<const SampleGraspPoses::Goal> goal);
-  // void execute(const GoalHandleSharedPtr& goal_handle);
+  void execute(const GoalHandleSharedPtr& goal_handle);
   // std::unique_ptr<tf2_ros::Buffer> tfBuffer_;
   // std::shared_ptr<tf2_ros::TransformListener> tfListener_;
   // std::shared_ptr<tf2_ros::CreateTimerROS> timer_interface_;
@@ -48,7 +48,8 @@ private:
   // std::string path_to_model_config_;  // path to GPD config file
   // std::string input_sensor_topic_;    // point cloud topic name
 
-  // std::function<SampleGraspPoses::Feedback::SharedPtr(void)> grasp_generator_;
+  bool& goal_active_;
+  std::function<SampleGraspPoses::Feedback::SharedPtr(void)> grasp_generator_;
 
   rclcpp_action::Server<SampleGraspPoses>::SharedPtr server_;
   SampleGraspPoses::Result result_;

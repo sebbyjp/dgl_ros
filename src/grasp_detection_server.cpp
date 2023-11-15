@@ -19,31 +19,17 @@ using std::placeholders::_2;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 
-template <class SensorMsgT, class ObsMsgT, class ObsT, class ActionT, class GraspDetectorT>
-GraspDetectionServer<SensorMsgT, ObsMsgT, ObsT, ActionT, GraspDetectorT>::GraspDetectionServer(rclcpp::NodeOptions& options)
+GraspDetectionServer::GraspDetectionServer(rclcpp::NodeOptions& options)
   : rclcpp::Node("grasp_detection_server", options)
 {
   const Eigen::Isometry3d trans_base_cam = dgl_ros::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
   const Eigen::Isometry3d transform_cam_opt = dgl_ros::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  grasp_detector_ = std::make_unique<GraspDetectorT("/simply_ws/src/dgl_ros/config/gpd_config.yaml");
+  grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/config/gpd_config.yaml");
   grasp_generator_ = std::make_shared<GraspGenerator>(std::bind(&GraspDetectionServer::SampleGrasps, this), goal_active_);
   sensor_listener_ = std::make_shared<SensorListener<PointCloud2, PointCloud2>>(
-      "rgbd_camera/points", "processed_sensor_data", std::bind(&GraspDetectionServer::SensorCallback, this, _1, _2));
+      "rgbd_camera/points", "processed_sensor_data", std::bind(&GraspDetectionServer::CloudCallback, this, _1, _2));
 }
-
-void GraspDetectionServer<SensorMsgT, ObsMsgT, ObsT, ActionT, GraspDetectorT>::HandleAccepted(const GoalHandleSharedPtr& goal_handle)
-{
-  RCLCPP_INFO(this->get_logger(), "New goal accepted");
-  goal_active_ = true;
-  // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-  std::thread{ std::bind(&GraspGenerator::execute, this, _1), goal_handle }.detach();
-}
-
-// void GraspGenerator::execute(const GoalHandleSharedPtr& goal_handle)
-// {
-//   goal_handle->publish_feedback(grasp_generator_());
-// }
 
 SampleGraspPoses::Feedback::SharedPtr GraspDetectionServer::SampleGrasps()
 {
