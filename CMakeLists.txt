@@ -56,6 +56,11 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
 )
 
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
 add_library(grasp_generator SHARED
     src/components/grasp_generator.cpp)
 
@@ -72,7 +77,12 @@ ament_target_dependencies(grasp_generator
 
 # rclcpp_components_register_nodes(grasp_generator_server "GraspGeneratorServer")
 # set(node_plugins "${node_plugins}GraspGeneratorServer;$<TARGET_FILE:grasp_generator_server>\n")
-add_library(sensor_listener SHARED
+add_library(observer SHARED src/observer.cpp)
+    ament_target_dependencies(observer
+    rclcpp
+)
+
+    add_library(sensor_listener SHARED
     src/components/sensor_listener.cpp)
 
 # target_compile_definitions(sensor_listener
@@ -123,11 +133,14 @@ target_link_libraries(grasp_detection_server ${Eigen3_LIBRARIES}
 install(TARGETS
     grasp_detection_server
     cloud_util pose_util
-
+    observer
     grasp_generator
     sensor_listener
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
-    LIBRARY DESTINATION share/${PROJECT_NAME})
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    INCLUDES DESTINATION include)
+
+    
 
 # ARCHIVE DESTINATION lib
 # LIBRARY DESTINATION lib

@@ -10,7 +10,6 @@ GraspGenerator::GraspGenerator(
   : rclcpp::Node("grasp_generator_server"), goal_active_(goal_active)
 {
   grasp_generator_ = grasp_generator;
-
   RCLCPP_INFO(this->get_logger(), "Grasp detection action server ready");
   // tfBuffer_ = std::make_unique<tf2_ros::Buffer>(action_node_->get_clock());
   // tfListener_ = std::make_shared<tf2_ros::TransformListener>(*tfBuffer_);
@@ -55,6 +54,8 @@ void GraspGenerator::execute(const GoalHandleSharedPtr& goal_handle)
 {
   goal_handle->publish_feedback(grasp_generator_());
 }
+
+
 
 // Uncomment below to be able to load this component as a plugin in a running process.
 // See https://docs.ros.org/en/rolling/Tutorials/Intermediate/Composition.html?highlight=composable
