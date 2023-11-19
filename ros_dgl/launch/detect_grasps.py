@@ -52,7 +52,7 @@ def generate_launch_description() -> LaunchDescription:
         ),
         Node(
             name="detect_grasps_node",
-            package='dgl_ros',
+            package='ros_dgl_core',
             executable='grasp_detection_server',
             output='screen',
             parameters=[{

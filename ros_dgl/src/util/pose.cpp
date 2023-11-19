@@ -3,9 +3,9 @@
 #include <vector>
 #include <Eigen/Geometry>
 #include <geometry_msgs/msg/pose.hpp>
-#include <dgl_ros/util/pose.hpp>
+#include <ros_dgl/util/pose.hpp>
 
-namespace dgl_ros
+namespace ros_dgl
 {
 namespace util
 {
@@ -34,4 +34,4 @@ Eigen::Isometry3d IsometryFromXYZRPY(std::vector<double> pose)
   return translate * q;
 }
 }  // namespace util
-}  // namespace dgl_ros
+}  // namespace ros_dgl

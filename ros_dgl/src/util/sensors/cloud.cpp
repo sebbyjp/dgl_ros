@@ -1,10 +1,10 @@
-#include <dgl_ros/util/sensors/cloud.hpp>
+#include <ros_dgl/util/sensors/cloud.hpp>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 
-namespace dgl_ros
+namespace ros_dgl
 {
 namespace cloud_util
 {
@@ -71,4 +71,4 @@ void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<d
 }
 
 }  // namespace cloud_util
-}  // namespace dgl_ros
+}  // namespace ros_dgl

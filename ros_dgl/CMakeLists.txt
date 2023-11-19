@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(dgl_ros)
+project(ros_dgl)
 
 if(NOT CMAKE_C_STANDARD)
     set(CMAKE_C_STANDARD 99)
@@ -26,11 +26,11 @@ find_package(deep_grasp_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(ros_dgl_interfaces REQUIRED)
 find_library(GPD_LIB NAMES gpd PATHS /usr/local/lib PATH_SUFFIXES lib NO_DEFAULT_PATH)
 
 if(GPD_LIB)
@@ -57,8 +57,8 @@ include_directories(
 )
 
 install(
-  DIRECTORY include/
-  DESTINATION include
+    DIRECTORY include/
+    DESTINATION include
 )
 
 add_library(grasp_generator SHARED
@@ -78,11 +78,11 @@ ament_target_dependencies(grasp_generator
 # rclcpp_components_register_nodes(grasp_generator_server "GraspGeneratorServer")
 # set(node_plugins "${node_plugins}GraspGeneratorServer;$<TARGET_FILE:grasp_generator_server>\n")
 add_library(observer SHARED src/observer.cpp)
-    ament_target_dependencies(observer
-    rclcpp
+ament_target_dependencies(observer
+    rclcpp sensor_msgs ros_dgl_interfaces
 )
 
-    add_library(sensor_listener SHARED
+add_library(sensor_listener SHARED
     src/components/sensor_listener.cpp)
 
 # target_compile_definitions(sensor_listener
@@ -136,11 +136,11 @@ install(TARGETS
     observer
     grasp_generator
     sensor_listener
+    EXPORT ${PROJECT_NAME}Targets
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
-    INCLUDES DESTINATION include)
-
-    
+    INCLUDES DESTINATION include
+)
 
 # ARCHIVE DESTINATION lib
 # LIBRARY DESTINATION lib
@@ -153,6 +153,7 @@ install(DIRECTORY
     launch
     DESTINATION share/${PROJECT_NAME}
 )
+ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

@@ -1,6 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
-#include <dgl_ros/components/sensor_listener.hpp>
-#include <dgl_ros/components/grasp_generator.hpp>
+#include <ros_dgl/components/sensor_listener.hpp>
+#include <ros_dgl/components/grasp_generator.hpp>
 #include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
@@ -8,9 +8,9 @@
 #include <gpd/util/cloud.h>
 #include <gpd/grasp_detector.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <dgl_ros/util/pose.hpp>
-#include <dgl_ros/util/sensors/cloud.hpp>
-#include <dgl_ros/grasp_detection_server.hpp>
+#include <ros_dgl/util/pose.hpp>
+#include <ros_dgl/util/sensors/cloud.hpp>
+#include <ros_dgl/grasp_detection_server.hpp>
 using deep_grasp_msgs::action::SampleGraspPoses;
 using sensor_msgs::msg::PointCloud2;
 using std::placeholders::_1;
@@ -22,10 +22,10 @@ typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 GraspDetectionServer::GraspDetectionServer(rclcpp::NodeOptions& options)
   : rclcpp::Node("grasp_detection_server", options)
 {
-  const Eigen::Isometry3d trans_base_cam = dgl_ros::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
-  const Eigen::Isometry3d transform_cam_opt = dgl_ros::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
+  const Eigen::Isometry3d trans_base_cam = ros_dgl::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
+  const Eigen::Isometry3d transform_cam_opt = ros_dgl::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/config/gpd_config.yaml");
+  grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/ros_dgl/ros_dgl_core/config/gpd_config.yaml");
   grasp_generator_ = std::make_shared<GraspGenerator>(std::bind(&GraspDetectionServer::SampleGrasps, this), goal_active_);
   sensor_listener_ = std::make_shared<SensorListener<PointCloud2, PointCloud2>>(
       "rgbd_camera/points", "processed_sensor_data", std::bind(&GraspDetectionServer::CloudCallback, this, _1, _2));
@@ -95,7 +95,7 @@ void GraspDetectionServer::CloudCallback(rclcpp::Publisher<PointCloud2>::SharedP
     pcl::fromROSMsg(*msg.get(), *cloud.get());
 
     // Segementation works best with XYXRGB
-    dgl_ros::cloud_util::removeTable(cloud);
+    ros_dgl::cloud_util::removeTable(cloud);
 
     // publish the cloud for visualization and debugging purposes
     PointCloud2 cloud_msg;

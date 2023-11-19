@@ -16,7 +16,7 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
  * @param [out] cloud - Segemented point cloud XYZRGB
  */
 
-namespace dgl_ros
+namespace ros_dgl
 {
 namespace cloud_util
 {
@@ -32,4 +32,4 @@ void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<d
                        PointCloudRGB::Ptr cloud);
 
 }  // namespace cloud_util
-}  // namespace dgl_ros
+}  // namespace ros_dgl

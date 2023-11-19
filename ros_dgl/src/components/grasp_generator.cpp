@@ -1,6 +1,6 @@
 
 // ROS
-#include <dgl_ros/components/grasp_generator.hpp>
+#include <ros_dgl/components/grasp_generator.hpp>
 
 #include <rclcpp_action/rclcpp_action.hpp>
 using std::placeholders::_1;

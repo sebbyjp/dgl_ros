@@ -1,5 +1,5 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <dgl_ros/components/sensor_listener.hpp>
+#include <ros_dgl/components/sensor_listener.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <functional>
 

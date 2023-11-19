@@ -1,6 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
-#include <dgl_ros/components/grasp_generator.hpp>
-#include <dgl_ros/components/sensor_listener.hpp>
+#include <ros_dgl/components/grasp_generator.hpp>
+#include <ros_dgl/components/sensor_listener.hpp>
 #include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
@@ -8,8 +8,8 @@
 #include <gpd/util/cloud.h>
 #include <gpd/grasp_detector.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <dgl_ros/util/pose.hpp>
-#include <dgl_ros/util/sensors/cloud.hpp>
+#include <ros_dgl/util/pose.hpp>
+#include <ros_dgl/util/sensors/cloud.hpp>
 
 using deep_grasp_msgs::action::SampleGraspPoses;
 using sensor_msgs::msg::PointCloud2;
