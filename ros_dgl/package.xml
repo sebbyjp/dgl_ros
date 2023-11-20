@@ -8,7 +8,6 @@
     <buildtool_depend>ament_cmake</buildtool_depend>
 
     <depend>sensor_msgs</depend>
-    <depend>deep_grasp_msgs</depend>
     <depend>std_msgs</depend>
     <depend>rclcpp</depend>
     <depend>ros_dgl_interfaces</depend>
@@ -23,13 +22,6 @@
     <test_depend>launch_testing_ros</test_depend>
     <test_depend>launch_testing_ament_cmake</test_depend>
     <test_depend>rmw_implementation_cmake</test_depend>
-
-
-    <exec_depend>rosidl_default_runtime</exec_depend>
-
-    <build_depend>rosidl_default_generators</build_depend>
-
-    <member_of_group>rosidl_interface_packages</member_of_group>
 
     <export>
         <build_type>ament_cmake</build_type>

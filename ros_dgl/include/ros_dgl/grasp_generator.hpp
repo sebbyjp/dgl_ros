@@ -7,26 +7,24 @@
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-// C++
+#include "ros_dgl_interfaces/action/sample_grasp_poses.hpp"
 #include <memory>
 
-// Action Server
-#include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
-
+namespace ros_dgl {
 /**
  * @brief Generates grasp poses.
  */
 class GraspGenerator : public rclcpp::Node
 {
 public:
-  using SampleGraspPoses =  typename deep_grasp_msgs::action::SampleGraspPoses;
+  using SampleGraspPoses =  typename ros_dgl_interfaces::action::SampleGraspPoses;
   using GoalHandleSharedPtr = typename std::shared_ptr<rclcpp_action::ServerGoalHandle<SampleGraspPoses>> ;
   /**
   * @brief Constructor
   * @details loads parameters, registers callbacks for the action server,
              and initializes GPD
   */
-  GraspGenerator(std::function<SampleGraspPoses::Feedback::SharedPtr()> grasp_generator, bool& goal_active);
+  GraspGenerator(std::function<SampleGraspPoses::Feedback::SharedPtr()> generate_grasps_func);
 
 
 private:
@@ -40,17 +38,8 @@ private:
 
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid,
                                           std::shared_ptr<const SampleGraspPoses::Goal> goal);
-  void execute(const GoalHandleSharedPtr& goal_handle);
-  // std::unique_ptr<tf2_ros::Buffer> tfBuffer_;
-  // std::shared_ptr<tf2_ros::TransformListener> tfListener_;
-  // std::shared_ptr<tf2_ros::CreateTimerROS> timer_interface_;
-
-  // std::string path_to_model_config_;  // path to GPD config file
-  // std::string input_sensor_topic_;    // point cloud topic name
-
-  bool& goal_active_;
-  std::function<SampleGraspPoses::Feedback::SharedPtr(void)> grasp_generator_;
+  std::function<SampleGraspPoses::Feedback::SharedPtr()> generate_grasps_func_;
 
   rclcpp_action::Server<SampleGraspPoses>::SharedPtr server_;
-  SampleGraspPoses::Result result_;
 };
+}  // namespace ros_dgl

@@ -1,62 +1,68 @@
 #include <rclcpp/rclcpp.hpp>
-#include <ros_dgl/components/sensor_listener.hpp>
-#include <ros_dgl/components/grasp_generator.hpp>
-#include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
+#include <ros_dgl/grasp_generator.hpp>
+#include <ros_dgl/observer.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
+#include <ros_dgl_interfaces/action/sample_grasp_poses.hpp>
 #include <Eigen/Dense>
 #include <gpd/util/cloud.h>
 #include <gpd/grasp_detector.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <ros_dgl/util/pose.hpp>
 #include <ros_dgl/util/sensors/cloud.hpp>
-#include <ros_dgl/grasp_detection_server.hpp>
-using deep_grasp_msgs::action::SampleGraspPoses;
+#include <ros_dgl/gpd_grasp_detection_server.hpp>
+
+using ros_dgl_interfaces::action::SampleGraspPoses;
 using sensor_msgs::msg::PointCloud2;
 using std::placeholders::_1;
-using std::placeholders::_2;
-
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
-
-GraspDetectionServer::GraspDetectionServer(rclcpp::NodeOptions& options)
+namespace ros_dgl
+{
+GPDGraspDetectionServer::GPDGraspDetectionServer(rclcpp::NodeOptions& options)
   : rclcpp::Node("grasp_detection_server", options)
 {
   const Eigen::Isometry3d trans_base_cam = ros_dgl::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
   const Eigen::Isometry3d transform_cam_opt = ros_dgl::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/ros_dgl/ros_dgl_core/config/gpd_config.yaml");
-  grasp_generator_ = std::make_shared<GraspGenerator>(std::bind(&GraspDetectionServer::SampleGrasps, this), goal_active_);
-  sensor_listener_ = std::make_shared<SensorListener<PointCloud2, PointCloud2>>(
-      "rgbd_camera/points", "processed_sensor_data", std::bind(&GraspDetectionServer::CloudCallback, this, _1, _2));
+  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/ros_dgl/config/gpd_config.yaml");
+  grasp_generator_ = std::make_shared<GraspGenerator>(std::bind(&GPDGraspDetectionServer::sampleGrasps, this));
+
+  observer_ = std::make_shared<Observer<PointCloud2, PointCloud2>>(
+    options.parameter_overrides({{"src_topic", "rgbd_camera/points"}}), std::bind(&GPDGraspDetectionServer::preprocessCloud, this, _1));
+  observer_->set_parameter(rclcpp::Parameter("publish", true));
+  observer_->set_parameter(rclcpp::Parameter("src_topic", "rgbd_camera/points"));
 }
 
-SampleGraspPoses::Feedback::SharedPtr GraspDetectionServer::SampleGrasps()
+SampleGraspPoses::Feedback::SharedPtr GPDGraspDetectionServer::sampleGrasps()
 {
-  while (CloudCam() == nullptr)
+  while (observer_->getObservation() == nullptr)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  gpd::util::Cloud cloud_cam = *CloudCam();
+  auto l = observer_->getSharedLock();
 
-  std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;              // detect grasp poses
-  grasp_detector_->preprocessPointCloud(cloud_cam, transform_base_opt_);  // preprocess the point cloud
-  grasps = grasp_detector_->detectGrasps(cloud_cam);                      // detect grasps in the point cloud
-
+    // Convert to PCL.
+    PointCloudRGB cloud;
+    pcl::moveFromROSMsg(*observer_->getObservation(), cloud);
+    l.unlock();
+    // Convert to GPD.
+    auto grasp_cloud = std::make_shared<PointCloudRGBA>();
+    pcl::copyPointCloud(cloud, *grasp_cloud);
+    Eigen::Matrix3Xd camera_view_point(3, 1);
+     gpd::util::Cloud gpd_cloud(grasp_cloud, 0, camera_view_point);
+     gpd_grasp_detector_->preprocessPointCloud(gpd_cloud, transform_base_opt_);
+  
+  std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;              // detect grasp poses                   // detect grasps in the point cloud
+  grasps = gpd_grasp_detector_->detectGrasps(gpd_cloud);  // detect grasp poses
   std::vector<unsigned int> grasp_ids;
   for (unsigned int i = 0; i < grasps.size(); i++)
   {
     grasp_ids.push_back(i);
   }
   auto feedback = std::make_shared<SampleGraspPoses::Feedback>();
-  if (grasp_ids.empty())
-  {
-    return feedback;
-  }
-
   for (auto id : grasp_ids)
   {
-    // transform grasp from camera optical link into frame_id (panda_link0)
+    // transform grasp from camera optical link into frame_id
     const Eigen::Isometry3d transform_opt_grasp =
         Eigen::Translation3d(grasps.at(id)->getPosition()) * Eigen::Quaterniond(grasps.at(id)->getOrientation());
 
@@ -86,50 +92,39 @@ SampleGraspPoses::Feedback::SharedPtr GraspDetectionServer::SampleGrasps()
   return feedback;
 }
 
-void GraspDetectionServer::CloudCallback(rclcpp::Publisher<PointCloud2>::SharedPtr pub,
-                                         const PointCloud2::SharedPtr& msg)
+std::unique_ptr<PointCloud2> GPDGraspDetectionServer::preprocessCloud(const PointCloud2& msg)
 {
-  if (goal_active_)
-  {
-    PointCloudRGB::Ptr cloud(new PointCloudRGB);
-    pcl::fromROSMsg(*msg.get(), *cloud.get());
-
+  // Convert to PCL
+  auto cloud = std::make_shared<PointCloudRGB>();
+    pcl::fromROSMsg(msg,*cloud);
     // Segementation works best with XYXRGB
     ros_dgl::cloud_util::removeTable(cloud);
-
-    // publish the cloud for visualization and debugging purposes
-    PointCloud2 cloud_msg;
-    pcl::toROSMsg(*cloud.get(), cloud_msg);
-    pub->publish(cloud_msg);
-
-    // TODO: set alpha channel to 1
-    // GPD required XYZRGBA
-    PointCloudRGBA::Ptr grasp_cloud = std::make_shared<PointCloudRGBA>();
-    pcl::copyPointCloud(*cloud.get(), *grasp_cloud.get());
-
-    // Construct the cloud camera
-    Eigen::Matrix3Xd camera_view_point(3, 1);
-    SetCloudCam(std::make_unique<gpd::util::Cloud>(grasp_cloud, 0, camera_view_point));
-  }
-
-  goal_active_ = false;
+   
+    
+    // Return the final observation
+    std::unique_ptr<PointCloud2> cloud_msg = std::make_unique<PointCloud2>();
+   pcl::toROSMsg(*cloud, *cloud_msg);
+    return cloud_msg;
 }
 
-void GraspDetectionServer::Run()
+void GPDGraspDetectionServer::Run()
 {
   rclcpp::executors::MultiThreadedExecutor exec;
   exec.add_node(grasp_generator_);
-  exec.add_node(sensor_listener_);
+  exec.add_node(observer_);
   exec.spin();
 
 }
+
+
+}  // namespace ros_dgl
 
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
   rclcpp::NodeOptions options;
   options.allow_undeclared_parameters(true);
-  GraspDetectionServer server(options);
+  ros_dgl::GPDGraspDetectionServer server(options);
   server.Run();
   rclcpp::shutdown();
   return 0;

@@ -52,8 +52,8 @@ def generate_launch_description() -> LaunchDescription:
         ),
         Node(
             name="detect_grasps_node",
-            package='ros_dgl_core',
-            executable='grasp_detection_server',
+            package='ros_dgl',
+            executable='gpd_grasp_detection_server',
             output='screen',
             parameters=[{
                 "input_topic": LaunchConfiguration('input_topic')

@@ -7,17 +7,12 @@
     <license>BSD</license>
     <buildtool_depend>ament_cmake</buildtool_depend>
 
-    <depend>sensor_msgs</depend>
-    <depend>deep_grasp_msgs</depend>
-    <depend>std_msgs</depend>
     <depend>rclcpp</depend>
+    <depend>geometry_msgs</depend>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
-
     <exec_depend>rosidl_default_runtime</exec_depend>
-
     <build_depend>rosidl_default_generators</build_depend>
-
     <member_of_group>rosidl_interface_packages</member_of_group>
 
     <export>

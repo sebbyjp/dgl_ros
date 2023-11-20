@@ -1,3 +1,0 @@
-int16 n_last
----
-sensor_msgs/PointCloud2 observation
