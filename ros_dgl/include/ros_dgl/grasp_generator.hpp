@@ -14,17 +14,17 @@ namespace ros_dgl {
 /**
  * @brief Generates grasp poses.
  */
-class GraspGenerator : public rclcpp::Node
+template <typename ActionT>
+class ActionProducer : public rclcpp::Node
 {
 public:
-  using SampleGraspPoses =  typename ros_dgl_interfaces::action::SampleGraspPoses;
-  using GoalHandleSharedPtr = typename std::shared_ptr<rclcpp_action::ServerGoalHandle<SampleGraspPoses>> ;
+  using GoalHandleSharedPtr = typename std::shared_ptr<rclcpp_action::ServerGoalHandle<ActionT>> ;
   /**
   * @brief Constructor
   * @details loads parameters, registers callbacks for the action server,
              and initializes GPD
   */
-  GraspGenerator(std::function<SampleGraspPoses::Feedback::SharedPtr()> generate_grasps_func);
+  ActionProducer(std::function<typename ActionT::Feedback::SharedPtr()> action_generator_func);
 
 
 private:
@@ -37,9 +37,9 @@ private:
    */
 
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid,
-                                          std::shared_ptr<const SampleGraspPoses::Goal> goal);
-  std::function<SampleGraspPoses::Feedback::SharedPtr()> generate_grasps_func_;
+                                          std::shared_ptr<const typename ActionT::Goal> goal);
+  std::function<typename ActionT::Feedback::SharedPtr()> action_generator_;
 
-  rclcpp_action::Server<SampleGraspPoses>::SharedPtr server_;
+  typename rclcpp_action::Server<ActionT>::SharedPtr server_;
 };
 }  // namespace ros_dgl
