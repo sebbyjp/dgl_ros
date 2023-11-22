@@ -1,9 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <functional>
-#include <queue>
-#include "ros_dgl/observer.hpp"
+#include <ros_dgl/observer.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-
 
 // Questions
 // Should action_producer request observations to begin being made?
@@ -34,7 +32,5 @@ Observer<ObsT, SrcT>::Observer(const rclcpp::NodeOptions& options,
   };
   src_sub_ = this->create_subscription<SrcT>(this->get_parameter("src_topic").as_string(), 10, callback);
 }
-
-template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
-
+// template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
 }  // namespace ros_dgl

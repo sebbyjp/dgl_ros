@@ -1,16 +1,16 @@
 #include <rclcpp/rclcpp.hpp>
-#include <ros_dgl/grasp_generator.hpp>
+#include <ros_dgl/actor.hpp>
 #include <ros_dgl/observer.hpp>
+#include <ros_dgl/agent.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <ros_dgl_interfaces/action/sample_grasp_poses.hpp>
 #include <Eigen/Dense>
 #include <gpd/util/cloud.h>
 #include <gpd/grasp_detector.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <ros_dgl/util/pose.hpp>
-#include <ros_dgl/util/sensors/cloud.hpp>
-#include <ros_dgl/gpd_grasp_detection_server.hpp>
-
+#include <ros_dgl/util/geometry.hpp>
+#include <ros_dgl/util/cloud.hpp>
+#include <ros_dgl_examples/gpd_grasp_detection_server.hpp>
 using ros_dgl_interfaces::action::SampleGraspPoses;
 using sensor_msgs::msg::PointCloud2;
 using std::placeholders::_1;
@@ -18,16 +18,26 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 namespace ros_dgl
 {
-GPDGraspDetectionServer::GPDGraspDetectionServer(rclcpp::NodeOptions& options)
-  : AgentNode<PointCloud2, SampleGraspPoses, PointCloud2>(options.parameter_overrides({{"src_topic", "rgbd_camera/points"}, {"publish", true}}))
+
+// template class Observer<PointCloud2, PointCloud2>::Observer;
+// template class Actor<SampleGraspPoses>::Actor;
+// template class Agent<PointCloud2, SampleGraspPoses, PointCloud2>::Agent;
+template <class AgentT>
+GPDGraspDetectionServer<AgentT>::GPDGraspDetectionServer(rclcpp::NodeOptions& options)
 {
+ agent_(
+      options.parameter_overrides(
+          { { "src_topic", "rgbd_camera/points" }, { "publish", true }, { "action_topic", "sample_grasp_poses" } }),
+      std::bind(&GPDGraspDetectionServer::actionFromObs, this, _1), std::bind(&GPDGraspDetectionServer::obsFromSrcs, this, _1));
+
   const Eigen::Isometry3d trans_base_cam = ros_dgl::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
   const Eigen::Isometry3d transform_cam_opt = ros_dgl::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
   gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/ros_dgl/config/gpd_config.yaml");
 }
-
-SampleGraspPoses::Feedback::SharedPtr GPDGraspDetectionServer::actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer)
+template <class AgentT>
+SampleGraspPoses::Feedback::SharedPtr
+GPDGraspDetectionServer< AgentT>::actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer)
 {
   while (observer->getObservation() == nullptr)
   {
@@ -35,19 +45,20 @@ SampleGraspPoses::Feedback::SharedPtr GPDGraspDetectionServer::actionFromObs(std
   }
   auto l = observer->getSharedLock();
 
-    // Convert to PCL.
-    PointCloudRGB cloud;
-    pcl::moveFromROSMsg(*observer->getObservation(), cloud);
-    l.unlock();
-    // Convert to GPD.
-    auto grasp_cloud = std::make_shared<PointCloudRGBA>();
-    pcl::copyPointCloud(cloud, *grasp_cloud);
-    Eigen::Matrix3Xd camera_view_point(3, 1);
-     gpd::util::Cloud gpd_cloud(grasp_cloud, 0, camera_view_point);
-     gpd_grasp_detector_->preprocessPointCloud(gpd_cloud, transform_base_opt_);
-  
-  std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;              // detect grasp poses                   // detect grasps in the point cloud
-  grasps = gpd_grasp_detector_->detectGrasps(gpd_cloud);  // detect grasp poses
+  // Convert to PCL.
+  PointCloudRGB cloud;
+  pcl::moveFromROSMsg(*observer->getObservation(), cloud);
+  l.unlock();
+  // Convert to GPD.
+  auto grasp_cloud = std::make_shared<PointCloudRGBA>();
+  pcl::copyPointCloud(cloud, *grasp_cloud);
+  Eigen::Matrix3Xd camera_view_point(3, 1);
+  gpd::util::Cloud gpd_cloud(grasp_cloud, 0, camera_view_point);
+  gpd_grasp_detector_->preprocessPointCloud(gpd_cloud, transform_base_opt_);
+
+  std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;  // detect grasp poses                   // detect grasps
+                                                              // in the point cloud
+  grasps = gpd_grasp_detector_->detectGrasps(gpd_cloud);      // detect grasp poses
   std::vector<unsigned int> grasp_ids;
   for (unsigned int i = 0; i < grasps.size(); i++)
   {
@@ -85,30 +96,29 @@ SampleGraspPoses::Feedback::SharedPtr GPDGraspDetectionServer::actionFromObs(std
 
   return feedback;
 }
-
-std::unique_ptr<PointCloud2> GPDGraspDetectionServer::obsFromSrcs(const PointCloud2& msg)
+template <class AgentT>
+std::unique_ptr<PointCloud2> GPDGraspDetectionServer<AgentT>::obsFromSrcs(const PointCloud2& msg)
 {
   // Convert to PCL
   auto cloud = std::make_shared<PointCloudRGB>();
-    pcl::fromROSMsg(msg,*cloud);
-    // Segementation works best with XYXRGB
-    ros_dgl::cloud_util::removeTable(cloud);
-   
-    
-    // Return the final observation
-    std::unique_ptr<PointCloud2> cloud_msg = std::make_unique<PointCloud2>();
-   pcl::toROSMsg(*cloud, *cloud_msg);
-    return cloud_msg;
-}
+  pcl::fromROSMsg(msg, *cloud);
+  // Segementation works best with XYXRGB
+  ros_dgl::util::cloud::removeTable(cloud);
 
+  // Return the final observation
+  std::unique_ptr<PointCloud2> cloud_msg = std::make_unique<PointCloud2>();
+  pcl::toROSMsg(*cloud, *cloud_msg);
+  return cloud_msg;
+}
+template class GPDGraspDetectionServer<ros_dgl::Agent<PointCloud2, SampleGraspPoses, PointCloud2>>::GPDGraspDetectionServer;
 }  // namespace ros_dgl
 
 int main(int argc, char** argv)
 {
-    rclcpp::init(argc, argv);
+  rclcpp::init(argc, argv);
   rclcpp::NodeOptions options;
   options.allow_undeclared_parameters(true);
-  ros_dgl::GPDGraspDetectionServer server(options);
+  ros_dgl::GPDGraspDetectionServer<ros_dgl::Agent<ros_dgl::PointCloud2, ros_dgl::SampleGraspPoses, ros_dgl::PointCloud2>> server(options);
   server.run();
   rclcpp::shutdown();
   return 0;

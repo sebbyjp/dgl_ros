@@ -7,7 +7,6 @@
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include "ros_dgl_interfaces/action/sample_grasp_poses.hpp"
 #include <memory>
 
 namespace ros_dgl {
@@ -15,19 +14,24 @@ namespace ros_dgl {
  * @brief Generates grasp poses.
  */
 template <typename ActionT>
-class ActionProducer : public rclcpp::Node
+class Actor : public rclcpp::Node
 {
 public:
-  using GoalHandleSharedPtr = typename std::shared_ptr<rclcpp_action::ServerGoalHandle<ActionT>> ;
+Actor(const rclcpp::NodeOptions& options) : Node("actor", options) {
+  this->declare_parameter("action_topic", "action_producer_topic");
+}
+
   /**
   * @brief Constructor
   * @details loads parameters, registers callbacks for the action server,
              and initializes GPD
   */
-  ActionProducer(std::function<typename ActionT::Feedback::SharedPtr()> action_generator_func);
+  Actor(const rclcpp::NodeOptions& options, std::function<typename ActionT::Feedback::SharedPtr()> action_generator_func);
 
 
 private:
+  typedef std::shared_ptr<rclcpp_action::ServerGoalHandle<ActionT>>  GoalHandleSharedPtr ;
+
   rclcpp_action::CancelResponse handle_cancel(const GoalHandleSharedPtr goal_handle);
   void handle_accepted(const GoalHandleSharedPtr& goal_handle);
 

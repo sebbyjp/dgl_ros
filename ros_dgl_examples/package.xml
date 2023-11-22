@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
-    <name>ros_dgl</name>
+    <name>ros_dgl_examples</name>
     <version>0.0.1</version>
-    <description>Nodes to integrate a deep learning model in ros2</description>
+    <description>Deep Grasp Instantiations in ros2 </description>
     <maintainer email="peraltasjp@gmail.com">Sebastian Peralta </maintainer>
     <license>BSD</license>
     <buildtool_depend>ament_cmake</buildtool_depend>
@@ -11,6 +11,8 @@
     <depend>std_msgs</depend>
     <depend>rclcpp</depend>
     <depend>geometry_msgs</depend>
+    <depend>ros_dgl</depend>
+    <depend>ros_dgl_interfaces</depend>
 
     <test_depend>ament_cmake_pytest</test_depend>
     <test_depend>ament_lint_auto</test_depend>

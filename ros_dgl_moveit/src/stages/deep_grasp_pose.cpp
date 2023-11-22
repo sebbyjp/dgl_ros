@@ -40,8 +40,8 @@
 #include <rviz_marker_tools/marker_creation.h>
 #include <moveit/planning_scene/planning_scene.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
-#include <deep_grasp_task/stages/deep_grasp_pose.h>
-#include <deep_grasp_msgs/action/sample_grasp_poses.hpp>
+#include <ros_dgl_moveit/stages/deep_grasp_pose.h>
+#include <ros_dgl_interfaces/action/sample_grasp_poses.hpp>
 #include <functional>
 #include <rclcpp_action/rclcpp_action.hpp>
 
@@ -52,8 +52,8 @@ namespace task_constructor
 namespace stages
 {
 
-template <class ActionSpec>
-DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name, const std::string& stage_name,
+template <class ActionT>
+DeepGraspPose<ActionT>::DeepGraspPose(const std::string& action_name, const std::string& stage_name,
                                          int goal_timeout, int server_timeout)
   : GeneratePose(stage_name), ActionBaseT(action_name, false, goal_timeout, server_timeout), found_candidates_(false)
 {
@@ -63,44 +63,44 @@ DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name, const s
   p.declare<boost::any>("pregrasp", "pregrasp posture");
   p.declare<boost::any>("grasp", "grasp posture");
 
-  RCLCPP_INFO(ActionBaseT::nh_->get_logger(), "Waiting for connection to grasp generation action server...");
-  ActionBaseT::client_ptr_->wait_for_action_server();
-  RCLCPP_INFO(ActionBaseT::nh_->get_logger(), "Connected to server");
-  // visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(ActionBaseT::nh_);
+  RCLCPP_INFO(this->nh_->get_logger(), "Waiting for connection to grasp generation action server...");
+  this->client_ptr_->wait_for_action_server();
+  RCLCPP_INFO(this->nh_->get_logger(), "Connected to server");
+  // visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(this->nh_);
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::composeGoal()
+template <class ActionT>
+void DeepGraspPose<ActionT>::composeGoal()
 {
-  typename ActionSpec::Goal goal;
-  goal.action_name = ActionBaseT::action_name_;
-  typename rclcpp_action::Client<ActionSpec>::SendGoalOptions send_goal_options;
-  send_goal_options = typename rclcpp_action::Client<ActionSpec>::SendGoalOptions();
+  typename ActionT::Goal goal;
+  goal.action_name = this->action_name_;
+  typename rclcpp_action::Client<ActionT>::SendGoalOptions send_goal_options;
+  send_goal_options = typename rclcpp_action::Client<ActionT>::SendGoalOptions();
   using namespace std::placeholders;
-  send_goal_options.goal_response_callback = std::bind(&DeepGraspPose<ActionSpec>::goal_response_callback, this, _1);
-  send_goal_options.feedback_callback = std::bind(&DeepGraspPose<ActionSpec>::feedback_callback, this, _1, _2);
-  send_goal_options.result_callback = std::bind(&DeepGraspPose<ActionSpec>::result_callback, this, _1);
+  send_goal_options.goal_response_callback = std::bind(&DeepGraspPose<ActionT>::goal_response_callback, this, _1);
+  send_goal_options.feedback_callback = std::bind(&DeepGraspPose<ActionT>::feedback_callback, this, _1, _2);
+  send_goal_options.result_callback = std::bind(&DeepGraspPose<ActionT>::result_callback, this, _1);
 
-  auto result = ActionBaseT::client_ptr_->async_send_goal(goal, send_goal_options);
+  auto result = this->client_ptr_->async_send_goal(goal, send_goal_options);
 
-  RCLCPP_INFO(ActionBaseT::nh_->get_logger(), "Goal sent to server: %s", ActionBaseT::action_name_.c_str());
+  RCLCPP_INFO(this->nh_->get_logger(), "Goal sent to server: %s", this->action_name_.c_str());
 }
 
-template <class ActionSpec>
-bool DeepGraspPose<ActionSpec>::monitorGoal()
+template <class ActionT>
+bool DeepGraspPose<ActionT>::monitorGoal()
 {
   // monitor timeout
-  const bool monitor_timeout = ActionBaseT::goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
-  const double timeout_time = ActionBaseT::nh_->get_clock()->now().seconds() + ActionBaseT::goal_timeout_;
+  const bool monitor_timeout = this->goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
+  const double timeout_time = this->nh_->get_clock()->now().seconds() + this->goal_timeout_;
   while (rclcpp::ok())
   {
-    rclcpp::spin_some(ActionBaseT::nh_);
+    rclcpp::spin_some(this->nh_);
 
     // timeout reached
-    if (ActionBaseT::nh_->get_clock()->now().seconds() > timeout_time && monitor_timeout)
+    if (this->nh_->get_clock()->now().seconds() > timeout_time && monitor_timeout)
     {
-      ActionBaseT::client_ptr_->async_cancel_all_goals();
-      RCLCPP_ERROR(ActionBaseT::nh_->get_logger(), "Grasp pose generator time out reached");
+      this->client_ptr_->async_cancel_all_goals();
+      RCLCPP_ERROR(this->nh_->get_logger(), "Grasp pose generator time out reached");
       return false;
     }
     else if (found_candidates_)
@@ -111,31 +111,32 @@ bool DeepGraspPose<ActionSpec>::monitorGoal()
   return true;
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::goal_response_callback(const GoalHandleSharedPtr& goal_handle)
+template <class ActionT>
+void DeepGraspPose<ActionT>::goal_response_callback(const GoalHandleSharedPtr& goal_handle)
 {
   if (!goal_handle)
   {
-    RCLCPP_ERROR(ActionBaseT::nh_->get_logger(), "Goal was rejected by server");
+    RCLCPP_ERROR(this->nh_->get_logger(), "Goal was rejected by server");
   }
   else
   {
-    RCLCPP_INFO(ActionBaseT::nh_->get_logger(), "Goal accepted by server, waiting for result");
+    RCLCPP_INFO(this->nh_->get_logger(), "Goal accepted by server, waiting for result");
   }
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::feedback_callback(const GoalHandleSharedPtr goal_handle,
+template <class ActionT>
+void DeepGraspPose<ActionT>::feedback_callback(const GoalHandleSharedPtr goal_handle,
                                                   const std::shared_ptr<const Feedback> feedback)
 {
+  (void)goal_handle;
   // each candidate should have a cost
   if (feedback->grasp_candidates.size() != feedback->costs.size())
   {
-    RCLCPP_ERROR(ActionBaseT::nh_->get_logger(), "Invalid input: each grasp candidate needs an associated cost");
+    RCLCPP_ERROR(this->nh_->get_logger(), "Invalid input: each grasp candidate needs an associated cost");
   }
   else
   {
-    RCLCPP_INFO(ActionBaseT::nh_->get_logger(),
+    RCLCPP_INFO(this->nh_->get_logger(),
                 "Grasp generated feedback received %lu candidates: ", feedback->grasp_candidates.size());
 
     grasp_candidates_.resize(feedback->grasp_candidates.size());
@@ -148,23 +149,23 @@ void DeepGraspPose<ActionSpec>::feedback_callback(const GoalHandleSharedPtr goal
   }
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::result_callback(const WrappedResult& result)
+template <class ActionT>
+void DeepGraspPose<ActionT>::result_callback(const WrappedResult& result)
 {
   if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
   {
-    RCLCPP_INFO(ActionBaseT::nh_->get_logger(), "Found grasp candidates (result): %s",
+    RCLCPP_INFO(this->nh_->get_logger(), "Found grasp candidates (result): %s",
                 result.result->grasp_state.c_str());
   }
   else
   {
-    RCLCPP_ERROR(ActionBaseT::nh_->get_logger(), "No grasp candidates found (state): %s",
+    RCLCPP_ERROR(this->nh_->get_logger(), "No grasp candidates found (state): %s",
                  result.result->grasp_state.c_str());
   }
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model)
+template <class ActionT>
+void DeepGraspPose<ActionT>::init(const core::RobotModelConstPtr& robot_model)
 {
   InitStageException errors;
   try
@@ -204,8 +205,8 @@ void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model
   }
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::compute()
+template <class ActionT>
+void DeepGraspPose<ActionT>::compute()
 {
   if (upstream_solutions_.empty())
   {
@@ -228,7 +229,7 @@ void DeepGraspPose<ActionSpec>::compute()
   // blocking function untill timeout reached or results received
   if (monitorGoal())
   {
-    // ROS_WARN_NAMED(ActionBaseT::nh_->get_logger(), "number %lu: ",grasp_candidates_.size());
+    // ROS_WARN_NAMED(this->nh_->get_logger(), "number %lu: ",grasp_candidates_.size());
     for (unsigned int i = 0; i < grasp_candidates_.size(); i++)
     {
       InterfaceState state(scene);
@@ -250,8 +251,8 @@ void DeepGraspPose<ActionSpec>::compute()
   }
 }
 
-template <class ActionSpec>
-void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s)
+template <class ActionT>
+void DeepGraspPose<ActionT>::onNewSolution(const SolutionBase& s)
 {
   planning_scene::PlanningSceneConstPtr scene = s.end()->scene();
 
@@ -270,7 +271,7 @@ void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s)
     }
     else
     {
-      RCLCPP_WARN_STREAM(ActionBaseT::nh_->get_logger(), msg);
+      RCLCPP_WARN_STREAM(this->nh_->get_logger(), msg);
     }
     return;
   }
@@ -279,7 +280,7 @@ void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s)
 }
 
 // Explicit template instantiation
-template class DeepGraspPose<deep_grasp_msgs::action::SampleGraspPoses>;
+template class DeepGraspPose<ros_dgl_interfaces::action::SampleGraspPoses>;
 
 }  // namespace stages
 }  // namespace task_constructor

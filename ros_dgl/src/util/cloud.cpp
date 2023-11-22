@@ -1,4 +1,4 @@
-#include <ros_dgl/util/sensors/cloud.hpp>
+#include <ros_dgl/util/cloud.hpp>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
@@ -6,7 +6,9 @@
 
 namespace ros_dgl
 {
-namespace cloud_util
+namespace util
+{
+namespace cloud
 {
 // TODO(speralta): Signal error with absl::status ? or pass in ros node handle and use ROS_ERROR
 void removeTable(PointCloudRGB::Ptr cloud)
@@ -69,6 +71,6 @@ void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<d
   pass.setFilterLimits(xyz_lower.at(2), xyz_upper.at(2));
   pass.filter(*cloud.get());
 }
-
-}  // namespace cloud_util
+}  // namespace cloud
+}  // namespace util
 }  // namespace ros_dgl

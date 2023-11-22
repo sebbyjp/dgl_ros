@@ -18,7 +18,9 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 namespace ros_dgl
 {
-namespace cloud_util
+namespace util
+{
+namespace cloud
 {
 void removeTable(PointCloudRGB::Ptr cloud);
 
@@ -30,6 +32,7 @@ void removeTable(PointCloudRGB::Ptr cloud);
  */
 void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<double>& xyz_upper,
                        PointCloudRGB::Ptr cloud);
+}  // namespace cloud
+}  // namespace util
 
-}  // namespace cloud_util
 }  // namespace ros_dgl

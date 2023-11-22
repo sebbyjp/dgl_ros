@@ -37,7 +37,7 @@
 #pragma once
 
 #include <moveit/task_constructor/stages/generate_pose.h>
-#include <deep_grasp_task/stages/action_base.h>
+#include <ros_dgl_moveit/stages/action_base.h>
 #include <moveit/planning_scene/planning_scene.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
@@ -53,14 +53,15 @@ namespace stages
  * @param ActionSpec - action message (action message name + "ACTION")
  * @details Interfaces with a deep learning based grasp library using a action client
  */
-template <typename ActionSpec>
-class DeepGraspPose : public GeneratePose
+template <typename ActionT>
+class DeepGraspPose : public GeneratePose, ActionBase<ActionT>
 {
 private:
-  using Feedback = typename ActionSpec::Feedback;
-  using Result = typename ActionSpec::Result;
-  using GoalHandleSharedPtr = typename rclcpp_action::ClientGoalHandle<ActionSpec>::SharedPtr;
-  using WrappedResult = typename rclcpp_action::ClientGoalHandle<ActionSpec>::WrappedResult;
+  typedef ActionBase<ActionT> ActionBaseT;
+  typedef typename ActionBaseT::Feedback Feedback;
+  typedef typename ActionBaseT::Result Result;
+  typedef typename ActionBaseT::GoalHandleSharedPtr GoalHandleSharedPtr;
+  typedef typename ActionBaseT::WrappedResult WrappedResult;
 
 public:
   /**
@@ -72,7 +73,7 @@ public:
    * @details Initialize the client and connect to server
    */
   DeepGraspPose(const std::string& action_name, const std::string& stage_name = "generate grasp pose",
-				int goal_timeout = 0, int server_timeout = 0);
+                int goal_timeout = 0, int server_timeout = 0);
 
   /**
    * @brief Composes the action goal and sends to server
@@ -88,7 +89,7 @@ public:
   bool monitorGoal();
   void goal_response_callback(const GoalHandleSharedPtr& goal_handle) override;
   void feedback_callback(const GoalHandleSharedPtr goal_handle,
-						 const std::shared_ptr<const Feedback> feedback) override;
+                         const std::shared_ptr<const Feedback> feedback) override;
   void result_callback(const WrappedResult& result) override;
 
   void init(const core::RobotModelConstPtr& robot_model) override;
@@ -96,28 +97,28 @@ public:
 
   void setEndEffector(const std::string& eef)
   {
-	setProperty("eef", eef);
+    setProperty("eef", eef);
   }
   void setObject(const std::string& object)
   {
-	setProperty("object", object);
+    setProperty("object", object);
   }
 
   void setPreGraspPose(const std::string& pregrasp)
   {
-	properties().set("pregrasp", pregrasp);
+    properties().set("pregrasp", pregrasp);
   }
   void setPreGraspPose(const moveit_msgs::msg::RobotState& pregrasp)
   {
-	properties().set("pregrasp", pregrasp);
+    properties().set("pregrasp", pregrasp);
   }
   void setGraspPose(const std::string& grasp)
   {
-	properties().set("grasp", grasp);
+    properties().set("grasp", grasp);
   }
   void setGraspPose(const moveit_msgs::msg::RobotState& grasp)
   {
-	properties().set("grasp", grasp);
+    properties().set("grasp", grasp);
   }
 
 protected:

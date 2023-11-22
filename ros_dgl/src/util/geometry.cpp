@@ -1,9 +1,9 @@
 // Conversions from vector to pose and isometry
 
 #include <vector>
-#include <Eigen/Geometry>
+#include <Eigen/Dense>
 #include <geometry_msgs/msg/pose.hpp>
-#include <ros_dgl/util/pose.hpp>
+#include <ros_dgl/util/geometry.hpp>
 
 namespace ros_dgl
 {
