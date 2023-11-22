@@ -6,27 +6,23 @@
 #include <ros_dgl_interfaces/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <Eigen/Dense>
-#include <ros_dgl_examples/instantiations.hpp>
 
 typedef ros_dgl_interfaces::action::SampleGraspPoses SampleGraspPoses;
 typedef sensor_msgs::msg::PointCloud2 PointCloud2;
 namespace ros_dgl
 {
-template <typename AgentT>
-class GPDGraspDetectionServer
+
+class GPDGraspDetectionServer : public Agent<PointCloud2, SampleGraspPoses, PointCloud2>
 {
 public:
   GPDGraspDetectionServer(rclcpp::NodeOptions& options);
 
   SampleGraspPoses::Feedback::SharedPtr
-  actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer);
+  actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer) override;
 
-  std::unique_ptr<PointCloud2> obsFromSrcs(const PointCloud2& msg);
-
-  void run() {agent_.run();};
+  std::unique_ptr<PointCloud2> obsFromSrcs(const PointCloud2& msg) override;
 
 private:
-  AgentT agent_;
   std::unique_ptr<gpd::GraspDetector> gpd_grasp_detector_;
   Eigen::Isometry3d transform_base_opt_;
 };

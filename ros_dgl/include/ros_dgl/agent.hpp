@@ -10,17 +10,17 @@ template <typename ObsT, typename ActionT, typename... SrcTs>
 class Agent : public rclcpp::Node
 {
 public:
-  typedef std::function<typename ActionT::Feedback::SharedPtr(std::shared_ptr<Observer<ObsT, SrcTs...>> observer)>
-      ActionGeneratorFunc;
-  typedef std::function <std::unique_ptr<ObsT>(const SrcTs&... srcs)> ObsFromSrcsFunc;
-  Agent(rclcpp::NodeOptions& options) : Node("agent", options)
-  {
-  }
-  Agent(rclcpp::NodeOptions& options, ActionGeneratorFunc action_generator_func_, ObsFromSrcsFunc obs_from_srcs_func_);
+  Agent(rclcpp::NodeOptions& options);
   void run();
+
+  virtual typename ActionT::Feedback::SharedPtr actionFromObs(std::shared_ptr<Observer<ObsT, SrcTs...>> observer) = 0;
+
+  virtual std::unique_ptr<ObsT> obsFromSrcs(const SrcTs&... srcs) = 0;
+
+
 
 protected:
   std::shared_ptr<Observer<ObsT, SrcTs...>> observer_;
   std::shared_ptr<Actor<ActionT>> actor_;
 };
-}  // namespace ros_dgl
+} // namespace ros_dgl

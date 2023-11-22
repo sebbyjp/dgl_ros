@@ -32,5 +32,5 @@ Observer<ObsT, SrcT>::Observer(const rclcpp::NodeOptions& options,
   };
   src_sub_ = this->create_subscription<SrcT>(this->get_parameter("src_topic").as_string(), 10, callback);
 }
-// template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
+template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
 }  // namespace ros_dgl

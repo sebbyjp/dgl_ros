@@ -46,5 +46,5 @@ void Actor<ActionT>::handle_accepted(const GoalHandleSharedPtr& goal_handle)
   std::thread{ publish_grasps, goal_handle }.detach();
 }
 
-// template class Actor<ros_dgl_interfaces::action::SampleGraspPoses>::Actor;
+template class Actor<ros_dgl_interfaces::action::SampleGraspPoses>::Actor;
 } // namespace ros_dgl
