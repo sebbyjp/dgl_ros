@@ -21,10 +21,11 @@ namespace ros_dgl
 GPDGraspDetectionServer::GPDGraspDetectionServer(rclcpp::NodeOptions& options)
   : AgentNode<PointCloud2, SampleGraspPoses, PointCloud2>(options.parameter_overrides({{"src_topic", "rgbd_camera/points"}, {"publish", true}}))
 {
+  this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros/ros_dgl/config/gpd_config.yaml");
   const Eigen::Isometry3d trans_base_cam = ros_dgl::util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
   const Eigen::Isometry3d transform_cam_opt = ros_dgl::util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/ros_dgl/config/gpd_config.yaml");
+  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>(this->get_parameter("gpd_config_path").as_string());
 }
 
 SampleGraspPoses::Feedback::SharedPtr GPDGraspDetectionServer::actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer)

@@ -22,6 +22,9 @@ class AgentNode : public rclcpp::Node
 public:
   AgentNode(rclcpp::NodeOptions& options) : Node("agent", options)
   {
+    this->declare_parameter("src_topic", "rgbd_camera/points");
+    this->declare_parameter("publish", true);
+    this->declare_parameter("action_topic", "sample_grasp_poses");
     observer_ =
         std::make_shared<Observer<ObsT, SrcTs...>>(options, std::bind(&AgentNode::obsFromSrcs, this, std::placeholders::_1));
     action_producer_ = std::make_shared<ActionProducer<ActionT>>(std::bind(&AgentNode::actionFromObs, this, observer_));
