@@ -7,7 +7,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <Eigen/Dense>
 
-namespace dgl_ros_models
+namespace dgl_ros
 {
 typedef dgl_ros_interfaces::action::SampleGraspPoses SampleGraspPoses;
 typedef sensor_msgs::msg::PointCloud2 PointCloud2;
@@ -26,11 +26,10 @@ public:
   std::unique_ptr<PointCloud2> obsFromSrcs(const PointCloud2& msg) override;
 
 private:
-  std::unique_ptr<gpd::GraspDetector> gpd_grasp_detector_;
   Eigen::Isometry3d transform_base_opt_;
 };
 // template class Observer<PointCloud2, PointCloud2>::Observer;
 // template class Actor<SampleGraspPoses>::Actor;
 // template class Agent<PointCloud2, SampleGraspPoses, PointCloud2>::Agent;
 
-}  // namespace dgl_ros_models
+}  // namespace dgl_ros

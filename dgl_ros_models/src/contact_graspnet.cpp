@@ -26,7 +26,6 @@ ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options)
   const Eigen::Isometry3d trans_base_cam = util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
   const Eigen::Isometry3d transform_cam_opt = util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
   transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/dgl_ros/config/gpd_config.yaml");
 }
 
 SampleGraspPoses::Feedback::SharedPtr
@@ -60,7 +59,7 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions options;
   options.allow_undeclared_parameters(true);
-  dgl_ros_models::ContactGraspnet server(options);
+  dgl_ros::ContactGraspnet server(options);
   server.run();
   rclcpp::shutdown();
   return 0;

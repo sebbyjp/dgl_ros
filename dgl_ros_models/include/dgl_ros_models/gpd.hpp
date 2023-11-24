@@ -12,11 +12,6 @@ namespace sm = sensor_msgs::msg;
 namespace da = dgl_ros_interfaces::action;
 namespace dgl_ros
 {
-
-template class Observer<sm::PointCloud2, sm::PointCloud2>;
-template class Actor<da::SampleGraspPoses>;
-template class Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2>;
-
 typedef Observer<sm::PointCloud2, sm::PointCloud2> GpdObserver;
 typedef Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2> GpdAgent;
 typedef Actor<da::SampleGraspPoses> GpdActor;

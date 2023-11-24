@@ -44,7 +44,6 @@ endif()
 
 include_directories(
     include
-    ${dgl_ros_INCLUDE_DIRS}
     SYSTEM
     ${EIGEN3_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
@@ -68,26 +67,22 @@ ament_target_dependencies(gpd
 target_link_libraries(gpd
     ${Eigen3_LIBRARIES}
     ${PCL_LIBRARIES}
-    ${GPD_LIB}
-    ${dgl_ros_LIBRARIES})
+    ${GPD_LIB})
 
-# add_executable(contact_graspnet
-# src/contact_graspnet.cpp
-# )
-# ament_target_dependencies(contact_graspnet
-# rclcpp
-# dgl_ros_interfaces
-# pcl_conversions
-# dgl_ros
-# sensor_msgs)
-# target_link_libraries(contact_graspnet
-# ${Eigen3_LIBRARIES}
-# ${PCL_LIBRARIES}
-# ${GPD_LIB})
+add_executable(contact_graspnet
+    src/contact_graspnet.cpp
+)
+ament_target_dependencies(contact_graspnet
+    rclcpp
+    dgl_ros_interfaces
+    pcl_conversions
+    dgl_ros
+    sensor_msgs)
+target_link_libraries(contact_graspnet
+    ${Eigen3_LIBRARIES})
 install(TARGETS
     gpd
-
-    # contact_graspnet
+    contact_graspnet
     RUNTIME DESTINATION lib/${PROJECT_NAME}
     LIBRARY DESTINATION lib
 )

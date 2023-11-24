@@ -2,7 +2,7 @@
 // ROS
 #include <dgl_ros/actor.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-// #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
+#include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 namespace dgl_ros {
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -46,5 +46,5 @@ void Actor<ActionT>::handle_accepted(const GoalHandleSharedPtr& goal_handle)
   std::thread{ publish_grasps, goal_handle }.detach();
 }
 
-// template class Actor<dgl_ros_interfaces::action::SampleGraspPoses>::Actor;
+template class Actor< dgl_ros_interfaces::action::SampleGraspPoses>::Actor;
 } // namespace dgl_ros

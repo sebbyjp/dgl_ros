@@ -2,8 +2,8 @@
 #include <dgl_ros/actor.hpp>
 #include <dgl_ros/observer.hpp>
 #include <dgl_ros/agent.hpp>
-// #include <sensor_msgs/msg/point_cloud2.hpp>
-// #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 
 namespace dgl_ros
 {
@@ -24,5 +24,5 @@ void Agent<ObsT, ActionT, SrcTs...>::run()
   exec.add_node(observer_);
   exec.spin();
 }
-// template class Agent<sensor_msgs::msg::PointCloud2, dgl_ros_interfaces::action::SampleGraspPoses, sensor_msgs::msg::PointCloud2>::Agent;
+template class Agent<sensor_msgs::msg::PointCloud2, dgl_ros_interfaces::action::SampleGraspPoses, sensor_msgs::msg::PointCloud2>::Agent;
 }  // namespace dgl_ros

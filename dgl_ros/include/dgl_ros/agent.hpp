@@ -10,19 +10,8 @@ template <typename ObsT, typename ActionT, typename... SrcTs>
 class Agent : public rclcpp::Node
 {
 public:
-  Agent(rclcpp::NodeOptions& options) : Node("agent", options)
-{
-  observer_ =
-      std::make_shared<Observer<ObsT, SrcTs...>>(options, std::bind(&Agent::obsFromSrcs, this, std::placeholders::_1));
-  actor_ = std::make_shared<Actor<ActionT>>(options, std::bind(&Agent::actionFromObs, this, observer_));
-}
-  void run()
-{
-  rclcpp::executors::MultiThreadedExecutor exec;
-  exec.add_node(observer_);
-  exec.add_node(actor_);
-  exec.spin();
-}
+  Agent(rclcpp::NodeOptions& options);
+  void run();
 
   virtual typename ActionT::Feedback::SharedPtr actionFromObs(std::shared_ptr<Observer<ObsT, SrcTs...>> observer) = 0;
 
