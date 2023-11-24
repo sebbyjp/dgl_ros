@@ -38,7 +38,7 @@ via the [ROS service](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tool
 
 
 # Design Decisions
-- Objects should follow Reinforcement Learning concepts used by (OpenAI's gym)[https://gymnasium.farama.org/] and [Google's TF-Agents](https://github.com/tensorflow/agents). By committing to the RL framework, data is represented
+- Objects should follow Reinforcement Learning concepts used by [OpenAI's gym](https://gymnasium.farama.org/) and [Google's TF-Agents](https://github.com/tensorflow/agents). By committing to the RL framework, data is represented
 as flexibly as possible and includes open-loop models and datasets like [Contact Graspnet](https://github.com/NVlabs/contact_graspnet).
 
 - The primary interfaces for this library are ROS topics and services. This allows for easy integration with existing
