@@ -12,7 +12,7 @@ This has been tested with the following dependencies
 1. Follow [instructions](https://github.com/atenpas/gpd) to install GPD
 2. Clone this library into your `$ROS_WS/src` directory: `git clone https://github.com/sebbyjp/dgl_ros.git`
 3. Build this library from your `$ROS_WS` directory: ` colcon build --symlink-install --base-paths  src/dgl_ros/`
-4. In a terminal, run `ros2 run ros_dgl  gpd_grasp_detection_server --ros-args -p src_topic:=$ROS_TOPIC_GENERATING_POINTCLOUDS -p gpd_config_path:=$PATH_TO_YOUR_GPD_CONFIG`
+4. In a terminal, run `ros2 run dgl_ros_models gpd --ros-args -p src_topic0:=$ROS_TOPIC_GENERATING_POINTCLOUDS -p gpd_config_path:=$PATH_TO_YOUR_GPD_CONFIG`
 5. In a separate terminal, run `ros2 action send_goal /sample_grasp_poses ros_dgl_interfaces/action/SampleGraspPoses "{action_name: 'sample_grasp_poses'}"`
 
 # Concepts

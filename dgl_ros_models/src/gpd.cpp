@@ -8,27 +8,24 @@
 #include <dgl_ros_models/gpd.hpp>
 #include <gpd/grasp_detector.h>
 
-using sensor_msgs::msg::PointCloud2;
 using dgl_ros_interfaces::action::SampleGraspPoses;
+using sensor_msgs::msg::PointCloud2;
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 namespace dgl_models
 {
-  
-Gpd::Gpd(rclcpp::NodeOptions& options)
-  : GpdAgent(
-        options.parameter_overrides({{ "publish", true }, { "action_topic", "sample_grasp_poses"}}), { "rgbd_camera/points" })
+
+Gpd::Gpd(rclcpp::NodeOptions& options) : GpdAgent(options, { options.parameter_overrides()[0].as_string() })
 {
-  this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros/ros_dgl/config/gpd_config.yaml");
+  this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros/dgl_ros_models/config/gpd_config.yaml");
   const Eigen::Isometry3d trans_base_cam = dgl::util::isometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
-  const Eigen::Isometry3d transform_cam_opt =  dgl::util::isometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
-  transform_base_opt_ =  trans_base_cam * transform_cam_opt;
+  const Eigen::Isometry3d transform_cam_opt = dgl::util::isometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
+  transform_base_opt_ = trans_base_cam * transform_cam_opt;
   gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>(this->get_parameter("gpd_config_path").as_string());
 }
 
-SampleGraspPoses::Feedback::SharedPtr
-Gpd::actionFromObs(std::shared_ptr<GpdObserver> observer)
+SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObserver> observer)
 {
   auto [id, msg] = observer->observe();
   // Convert to PCL.
@@ -100,9 +97,11 @@ std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(std::shared_ptr<PointCloud2> msg)
 
 int main(int argc, char** argv)
 {
-  
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions options;
+  // TODO(speralta): Read in src topics more reliably.
+  options.parameter_overrides(
+      { { "src_topic0", "rgbd_camera/points" }, { "publish", true }, { "action_topic", "sample_grasp_poses" } });
   options.allow_undeclared_parameters(true);
   dgl_models::Gpd server(options);
   server.run();

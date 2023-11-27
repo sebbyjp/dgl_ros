@@ -33,13 +33,13 @@ std::shared_ptr<rclcpp::Subscription<SrcT>> generic_subscription(rclcpp::Node* n
                                                                  rclcpp::CallbackGroup::SharedPtr callback_group,
                                                                  SrcT* src_msg_dest, bool* received_observation)
 {
-  auto callback = [node, src_msg, received_observation](const std::shared_ptr<SrcT> msg) {
+  auto callback = [node, src_msg_dest, received_observation](const std::shared_ptr<SrcT> msg) {
     *src_msg_dest = *msg;
     *received_observation = true;
   };
   rclcpp::SubscriptionOptions options;
   options.callback_group = callback_group;
-  return node->create_subscription<SrcT>(topic, rclcpp::SensorDataQoS(), options);
+  return node->create_subscription<SrcT>(topic, rclcpp::SensorDataQoS(), callback, options);
 }
 
 /**
