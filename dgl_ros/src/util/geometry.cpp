@@ -5,7 +5,7 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <dgl_ros/util/geometry.hpp>
 
-namespace dgl_ros
+namespace dgl
 {
 namespace util
 {
@@ -25,7 +25,7 @@ geometry_msgs::msg::Pose poseFromXYZRPY(std::vector<double> pose)
   return p;
 }
 
-Eigen::Isometry3d IsometryFromXYZRPY(std::vector<double> pose)
+Eigen::Isometry3d isometryFromXYZRPY(std::vector<double> pose)
 {
   Eigen::Translation3d translate(Eigen::Vector3d(pose[0], pose[1], pose[2]));
   Eigen::Quaterniond q = Eigen::AngleAxisd(pose[3], Eigen::Vector3d::UnitX()) *
@@ -34,4 +34,4 @@ Eigen::Isometry3d IsometryFromXYZRPY(std::vector<double> pose)
   return translate * q;
 }
 }  // namespace util
-}  // namespace dgl_ros
+}  // namespace dgl

@@ -44,6 +44,8 @@ endif()
 
 include_directories(
     include
+
+    # ${dgl_ros_INCLUDE_DIRS}
     SYSTEM
     ${EIGEN3_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
@@ -58,31 +60,35 @@ install(
 add_executable(gpd
     src/gpd.cpp
 )
-ament_target_dependencies(gpd
+ament_target_dependencies(gpd PUBLIC
     rclcpp
     dgl_ros_interfaces
     pcl_conversions
     dgl_ros
     sensor_msgs)
-target_link_libraries(gpd
+target_link_libraries(gpd PUBLIC
     ${Eigen3_LIBRARIES}
     ${PCL_LIBRARIES}
     ${GPD_LIB})
+target_include_directories(gpd PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-add_executable(contact_graspnet
-    src/contact_graspnet.cpp
-)
-ament_target_dependencies(contact_graspnet
-    rclcpp
-    dgl_ros_interfaces
-    pcl_conversions
-    dgl_ros
-    sensor_msgs)
-target_link_libraries(contact_graspnet
-    ${Eigen3_LIBRARIES})
+# add_executable(contact_graspnet
+# src/contact_graspnet.cpp
+# )
+# ament_target_dependencies(contact_graspnet
+# rclcpp
+# dgl_ros_interfaces
+# pcl_conversions
+# dgl_ros
+# sensor_msgs)
+# target_link_libraries(contact_graspnet
+# ${Eigen3_LIBRARIES})
 install(TARGETS
     gpd
-    contact_graspnet
+
+    # contact_graspnet
     RUNTIME DESTINATION lib/${PROJECT_NAME}
     LIBRARY DESTINATION lib
 )

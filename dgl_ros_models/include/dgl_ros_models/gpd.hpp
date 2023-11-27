@@ -10,23 +10,30 @@
 
 namespace sm = sensor_msgs::msg;
 namespace da = dgl_ros_interfaces::action;
-namespace dgl_ros
+namespace dgl_models
 {
-typedef Observer<sm::PointCloud2, sm::PointCloud2> GpdObserver;
-typedef Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2> GpdAgent;
-typedef Actor<da::SampleGraspPoses> GpdActor;
+  // template class Observer<sm::PointCloud2, sm::PointCloud2>::Observer;
+  // template class Actor<da::SampleGraspPoses>::Actor;
+  // template class Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2>::Agent;
 
-class Gpd : public GpdAgent
+// typedef Observer<sm::PointCloud2, sm::PointCloud2> GpdObserver;
+// typedef Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2> GpdAgent;
+// typedef Actor<da::SampleGraspPoses> GpdActor;
+
+
+
+
+class Gpd : public dgl::Agent<sm::PointCloud2, da::SampleGraspPoses, sm::PointCloud2>
 {
 public:
   Gpd(rclcpp::NodeOptions& options);
 
-  da::SampleGraspPoses::Feedback::SharedPtr actionFromObs(std::shared_ptr<GpdObserver> observer) override;
+  da::SampleGraspPoses::Feedback::SharedPtr actionFromObs(std::shared_ptr<dgl::Observer<sm::PointCloud2, sm::PointCloud2>> observer) override;
 
-  sm::PointCloud2::UniquePtr obsFromSrcs(const sm::PointCloud2& msg) override;
+  sm::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sm::PointCloud2> msg) override;
 
 private:
   std::unique_ptr<gpd::GraspDetector> gpd_grasp_detector_;
   Eigen::Isometry3d transform_base_opt_;
 };
-}  // namespace dgl_ros
+}  // namespace dgl_models

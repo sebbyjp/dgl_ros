@@ -4,7 +4,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 
-namespace dgl_ros
+namespace dgl
 {
 namespace util
 {
@@ -73,4 +73,4 @@ void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<d
 }
 }  // namespace cloud
 }  // namespace util
-}  // namespace dgl_ros
+}  // namespace dgl

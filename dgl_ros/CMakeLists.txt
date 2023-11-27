@@ -27,55 +27,49 @@ install(
     DIRECTORY include/
     DESTINATION include/${PROJECT_NAME}
 )
-include_directories(include)
 
 # Util
-add_library(cloud_util SHARED src/util/cloud.cpp)
-target_link_libraries(cloud_util ${PCL_LIBRARIES})
-target_include_directories(cloud_util PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+# add_library(cloud_util SHARED src/util/cloud.cpp)
+# target_link_libraries(cloud_util ${PCL_LIBRARIES})
+# target_include_directories(cloud_util PUBLIC
+# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-add_library(geometry_util SHARED src/util/geometry.cpp)
-target_link_libraries(geometry_util Eigen3::Eigen)
-ament_target_dependencies(geometry_util geometry_msgs)
-target_include_directories(geometry_util PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+# add_library(geometry_util SHARED src/util/geometry.cpp)
+# target_link_libraries(geometry_util Eigen3::Eigen)
+# ament_target_dependencies(geometry_util geometry_msgs)
+# target_include_directories(geometry_util PUBLIC
+# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-add_library(observer SHARED src/observer.cpp)
-ament_target_dependencies(observer rclcpp sensor_msgs)
+# add_library(observer SHARED src/observer.cpp)
+# ament_target_dependencies(observer rclcpp sensor_msgs)
+# target_include_directories(observer PUBLIC
+# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
-target_include_directories(observer PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-add_library(actor SHARED src/actor.cpp)
-ament_target_dependencies(actor rclcpp rclcpp_action dgl_ros_interfaces)
-target_include_directories(actor PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-add_library(agent SHARED src/agent.cpp)
-target_link_libraries(agent PUBLIC actor observer)
-ament_target_dependencies(agent PUBLIC rclcpp sensor_msgs dgl_ros_interfaces)
-target_include_directories(agent PUBLIC
+# add_library(actor SHARED src/actor.cpp)
+# ament_target_dependencies(actor rclcpp rclcpp_action dgl_ros_interfaces)
+# target_include_directories(actor PUBLIC
+# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+add_library(${PROJECT_NAME} SHARED
+    src/agent.cpp src/actor.cpp src/observer.cpp
+    src/util/cloud.cpp src/util/geometry.cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} Eigen3::Eigen)
+ament_target_dependencies(${PROJECT_NAME} PUBLIC rclcpp sensor_msgs dgl_ros_interfaces geometry_msgs rclcpp_action)
+target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 install(TARGETS
-    cloud_util
-    geometry_util
-    observer
-    actor
-    agent
+    ${PROJECT_NAME}
     EXPORT export_${PROJECT_NAME}
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
-    LIBRARY DESTINATION share/${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
-
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_include_directories(include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

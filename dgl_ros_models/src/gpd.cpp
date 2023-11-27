@@ -17,32 +17,27 @@ using dgl_ros_interfaces::action::SampleGraspPoses;
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
-namespace dgl_ros
+namespace dgl_models
 {
   
 Gpd::Gpd(rclcpp::NodeOptions& options)
-  : GpdAgent(
-        options.parameter_overrides({ { "src_topic", "rgbd_camera/points" }, { "publish", true }, { "action_topic", "sample_grasp_poses"}}))
+  : dgl::Agent<PointCloud2, SampleGraspPoses, PointCloud2>(
+        options.parameter_overrides({{ "publish", true }, { "action_topic", "sample_grasp_poses"}}), { "rgbd_camera/points" })
 {
-  const Eigen::Isometry3d trans_base_cam = util::IsometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
-  const Eigen::Isometry3d transform_cam_opt = util::IsometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
-  transform_base_opt_ = trans_base_cam * transform_cam_opt;
-  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/dgl_ros/config/gpd_config.yaml");
+  const Eigen::Isometry3d trans_base_cam = dgl::util::isometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
+  const Eigen::Isometry3d transform_cam_opt =  dgl::util::isometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
+  transform_base_opt_ =  trans_base_cam * transform_cam_opt;
+  gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>("/simply_ws/src/dgl_ros/dgl_ros_models/config/gpd_config.yaml");
 }
 
 SampleGraspPoses::Feedback::SharedPtr
-Gpd::actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer)
+Gpd::actionFromObs(std::shared_ptr<dgl::Observer<PointCloud2, PointCloud2>> observer)
 {
-  while (observer->getObservation() == nullptr)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-  auto l = observer->getSharedLock();
-
+  auto [id, msg] = observer->observe();
   // Convert to PCL.
   PointCloudRGB cloud;
-  pcl::moveFromROSMsg(*observer->getObservation(), cloud);
-  l.unlock();
+  pcl::moveFromROSMsg(*msg, cloud);
+
   // Convert to GPD.
   auto grasp_cloud = std::make_shared<PointCloudRGBA>();
   pcl::copyPointCloud(cloud, *grasp_cloud);
@@ -91,13 +86,13 @@ Gpd::actionFromObs(std::shared_ptr<Observer<PointCloud2, PointCloud2>> observer)
   return feedback;
 }
 
-std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(const PointCloud2& msg)
+std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(std::shared_ptr<PointCloud2> msg)
 {
   // Convert to PCL
   auto cloud = std::make_shared<PointCloudRGB>();
-  pcl::fromROSMsg(msg, *cloud);
+  pcl::fromROSMsg(*msg, *cloud);
   // Segementation works best with XYXRGB
-  dgl_ros::util::cloud::removeTable(cloud);
+  dgl::util::cloud::removeTable(cloud);
 
   // Return the final observation
   std::unique_ptr<PointCloud2> cloud_msg = std::make_unique<PointCloud2>();
@@ -106,7 +101,7 @@ std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(const PointCloud2& msg)
 }
 // template class Observer<PointCloud2, PointCloud2>::Observer;
 // template class Agent<PointCloud2, SampleGraspPoses, PointCloud2>::Agent;
-}  // namespace dgl_ros
+}  // namespace dgl
 
 int main(int argc, char** argv)
 {
@@ -114,7 +109,7 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions options;
   options.allow_undeclared_parameters(true);
-  dgl_ros::Gpd server(options);
+  dgl_models::Gpd server(options);
   server.run();
   rclcpp::shutdown();
   return 0;
