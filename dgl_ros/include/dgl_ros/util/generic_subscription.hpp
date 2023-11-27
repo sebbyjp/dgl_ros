@@ -1,3 +1,11 @@
+// Copyright (c) 2023 Sebastian Peralta
+// 
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+/**
+ * @brief Helper functions for creating generic subscriptions.
+ * 
+ */
 #pragma once
 #include <rclcpp/rclcpp.hpp>
 #include <functional>
@@ -17,26 +25,26 @@ namespace util
  * @param topic
  * @param callback_group
  * @param src_msg Pointer to message to store subscription in.
- * @param received_observation
+ * @param received_observation Pointer to bool that is set to true when message is recieved.
  * @return std::shared_ptr<rclcpp::Subscription<SrcT>>
  */
 template <typename SrcT>
 std::shared_ptr<rclcpp::Subscription<SrcT>> generic_subscription(rclcpp::Node* node, const std::string& topic,
                                                                  rclcpp::CallbackGroup::SharedPtr callback_group,
-                                                                 SrcT* src_msg, bool* received_observation)
+                                                                 SrcT* src_msg_dest, bool* received_observation)
 {
   auto callback = [node, src_msg, received_observation](const std::shared_ptr<SrcT> msg) {
-    *src_msg = *msg;
+    *src_msg_dest = *msg;
     *received_observation = true;
-    RCLCPP_WARN(node->get_logger(), "Received observation!");
   };
   rclcpp::SubscriptionOptions options;
   options.callback_group = callback_group;
-  return node->create_subscription<SrcT>(topic, rclcpp::SensorDataQoS(), callback, options);
+  return node->create_subscription<SrcT>(topic, rclcpp::SensorDataQoS(), options);
 }
 
 /**
- * @brief Creates and returns tuple of generic subscriptions.
+ * @brief Creates and returns tuple of subscriptions that subscribe to src_topics
+ *  and store the messages in src_msgs. Additionally, sets recieved_first_srcs to true
  *
  * @tparam Tuple
  * @tparam Is compile-time sequence of integers.

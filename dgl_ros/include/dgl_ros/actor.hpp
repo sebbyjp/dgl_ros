@@ -1,8 +1,8 @@
-/**
- * @file grasp_generator.hpp
- * @brief
- *
- */
+// Copyright (c) 2023 Sebastian Peralta
+// 
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 #pragma once
 #include <functional>
 #include <rclcpp/rclcpp.hpp>
@@ -12,17 +12,18 @@
 namespace dgl
 {
 /**
- * @brief Generates grasp poses.
+ * @brief This class is responsible for generating actions over a ROS2 action server.
  */
 template <typename ActionT>
 class Actor : public rclcpp::Node
 {
 public:
   /**
-  * @brief Constructor
-  * @details loads parameters, registers callbacks for the action server,
-             and initializes GPD
-  */
+   * @brief Construct a new Actor object
+   * 
+   * @param options 
+   * @param action_generator_func 
+   */
   Actor(const rclcpp::NodeOptions& options,
         std::function<typename ActionT::Feedback::SharedPtr()> action_generator_func)
     : Node("actor", options)

@@ -18,46 +18,22 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(dgl_ros_interfaces REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(PCL REQUIRED)
+find_package(pcl_ros REQUIRED)
 
 install(
     DIRECTORY include/
     DESTINATION include/${PROJECT_NAME}
 )
 
-# Util
-# add_library(cloud_util SHARED src/util/cloud.cpp)
-# target_link_libraries(cloud_util ${PCL_LIBRARIES})
-# target_include_directories(cloud_util PUBLIC
-# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-# add_library(geometry_util SHARED src/util/geometry.cpp)
-# target_link_libraries(geometry_util Eigen3::Eigen)
-# ament_target_dependencies(geometry_util geometry_msgs)
-# target_include_directories(geometry_util PUBLIC
-# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-# add_library(observer SHARED src/observer.cpp)
-# ament_target_dependencies(observer rclcpp sensor_msgs)
-# target_include_directories(observer PUBLIC
-# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-
-# add_library(actor SHARED src/actor.cpp)
-# ament_target_dependencies(actor rclcpp rclcpp_action dgl_ros_interfaces)
-# target_include_directories(actor PUBLIC
-# "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-# "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+set(DEPENDENCIES
+    rclcpp geometry_msgs rclcpp_action Eigen3 pcl_ros)
 add_library(${PROJECT_NAME} SHARED
     src/agent.cpp src/actor.cpp src/observer.cpp
     src/util/cloud.cpp src/util/geometry.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} Eigen3::Eigen)
-ament_target_dependencies(${PROJECT_NAME} PUBLIC rclcpp sensor_msgs dgl_ros_interfaces geometry_msgs rclcpp_action)
+
+#
+ament_target_dependencies(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
@@ -70,6 +46,7 @@ install(TARGETS
     ARCHIVE DESTINATION lib
 )
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${DEPENDENCIES})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

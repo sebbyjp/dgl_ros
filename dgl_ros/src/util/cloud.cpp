@@ -10,7 +10,6 @@ namespace util
 {
 namespace cloud
 {
-// TODO(speralta): Signal error with absl::status ? or pass in ros node handle and use ROS_ERROR
 void removeTable(PointCloudRGB::Ptr cloud)
 {
   // SAC segmentor without normals
@@ -33,11 +32,6 @@ void removeTable(PointCloudRGB::Ptr cloud)
   pcl::ModelCoefficients::Ptr coefficients_plane(new pcl::ModelCoefficients);
   segmentor.segment(*inliers_plane.get(), *coefficients_plane.get());
 
-  // if (inliers_plane->indices.size() == 0)
-  // {
-  //   ROS_ERROR("Could not estimate a planar model for the given dataset");
-  // }
-
   // Extract the inliers from the cloud
   pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices;
   extract_indices.setInputCloud(cloud);
@@ -47,10 +41,6 @@ void removeTable(PointCloudRGB::Ptr cloud)
   extract_indices.setNegative(true);
   extract_indices.filter(*cloud.get());
 
-  // if (cloud->points.empty())
-  // {
-  //   ROS_ERROR("Point cloud is empty, segementation failed");
-  // }
 }
 
 void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<double>& xyz_upper,

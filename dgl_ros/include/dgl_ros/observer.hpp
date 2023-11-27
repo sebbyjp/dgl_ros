@@ -1,8 +1,8 @@
-/**
- * @file observer.hpp
- * @copyright Copyright (c) 2023
- *
- */
+// Copyright (c) 2023 Sebastian Peralta
+// 
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 #pragma once
 #include <rclcpp/rclcpp.hpp>
 #include <functional>
@@ -12,8 +12,14 @@
 #include <dgl_ros/util/generic_subscription.hpp>
 namespace dgl
 {
+/**
+ * @brief Observer subscribes to src_topics and stores
+ *  a buffer of observations.
+ * 
+ * @tparam ObsT 
+ * @tparam SrcTs 
+ */
 template <typename ObsT, typename... SrcTs>
-
 class Observer : public rclcpp::Node
 {
 public:
@@ -22,7 +28,7 @@ public:
    *  a buffer of observations.
   * 
   * @param options 
-  * @param obs_from_srcs Function that creates an Observation from Source Data
+  * @param obs_from_srcs Function that creates an Observation from Source messages.
   * @param src_topics List of topics to subscribe to.
   * @param buffer_size 
   */
@@ -56,6 +62,12 @@ public:
     obs_pub_ = this->create_publisher<ObsT>("observation", 10, options_pub); 
   }
 
+  /**
+   * @brief Creates an observation from the last set of source messages and returns
+   * the index of the observation in the buffer and a pointer to the observation.
+   * 
+   * @return std::pair<size_t, ObsT*> 
+   */
   std::pair<size_t, ObsT*> observe()
   {
     while (!recieved_first_srcs())
@@ -63,7 +75,6 @@ public:
       RCLCPP_DEBUG_ONCE(this->get_logger(), "Observer is waiting for observation.");
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    RCLCPP_DEBUG(this->get_logger(), "Observer is observing.");
     std::unique_lock lock(obs_mutex_);
     if (observations_.size() == buffer_size_)
     {
@@ -79,8 +90,15 @@ public:
     return std::pair(observations_.size() - 1, observations_.back().get());
   }
 
+  /**
+   * @brief Returns a pointer to the observation at index id or nullptr if id is out of range.
+   * 
+   * @param id 
+   * @return ObsT* 
+   */
   ObsT* get(int id)
   {
+    // Subtract by num_pops_ to account for id's changing.
     if (id - num_pops_ < 0 || id - num_pops_ >= static_cast<int>(observations_.size()))
     {
       return nullptr;

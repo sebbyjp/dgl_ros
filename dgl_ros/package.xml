@@ -12,6 +12,7 @@
     <depend>rclcpp</depend>
     <depend>rclcpp_action</depend>
     <depend>geometry_msgs</depend>
+    <depend>dgl_ros_interfaces</depend>
 
 
     <test_depend>ament_cmake_pytest</test_depend>

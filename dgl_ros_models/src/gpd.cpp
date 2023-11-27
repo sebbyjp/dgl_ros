@@ -1,7 +1,4 @@
 #include <rclcpp/rclcpp.hpp>
-#include <dgl_ros/actor.hpp>
-#include <dgl_ros/observer.hpp>
-#include <dgl_ros/agent.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 #include <Eigen/Dense>
@@ -11,7 +8,6 @@
 #include <dgl_ros_models/gpd.hpp>
 #include <gpd/grasp_detector.h>
 
-using std::placeholders::_1;
 using sensor_msgs::msg::PointCloud2;
 using dgl_ros_interfaces::action::SampleGraspPoses;
 
@@ -21,7 +17,7 @@ namespace dgl_models
 {
   
 Gpd::Gpd(rclcpp::NodeOptions& options)
-  : dgl::Agent<PointCloud2, SampleGraspPoses, PointCloud2>(
+  : GpdAgent(
         options.parameter_overrides({{ "publish", true }, { "action_topic", "sample_grasp_poses"}}), { "rgbd_camera/points" })
 {
   const Eigen::Isometry3d trans_base_cam = dgl::util::isometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
@@ -31,7 +27,7 @@ Gpd::Gpd(rclcpp::NodeOptions& options)
 }
 
 SampleGraspPoses::Feedback::SharedPtr
-Gpd::actionFromObs(std::shared_ptr<dgl::Observer<PointCloud2, PointCloud2>> observer)
+Gpd::actionFromObs(std::shared_ptr<GpdObserver> observer)
 {
   auto [id, msg] = observer->observe();
   // Convert to PCL.
@@ -99,9 +95,7 @@ std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(std::shared_ptr<PointCloud2> msg)
   pcl::toROSMsg(*cloud, *cloud_msg);
   return cloud_msg;
 }
-// template class Observer<PointCloud2, PointCloud2>::Observer;
-// template class Agent<PointCloud2, SampleGraspPoses, PointCloud2>::Agent;
-}  // namespace dgl
+}  // namespace dgl_models
 
 int main(int argc, char** argv)
 {

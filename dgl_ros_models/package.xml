@@ -2,9 +2,9 @@
 <package format="3">
     <name>dgl_ros_models</name>
     <version>0.0.1</version>
-    <description>Deep Grasp Instantiations in ros2 </description>
+    <description>Deep Grasp Models in ros2 </description>
     <maintainer email="peraltasjp@gmail.com">Sebastian Peralta </maintainer>
-    <license>BSD</license>
+    <license>MIT</license>
     <buildtool_depend>ament_cmake</buildtool_depend>
 
     <depend>sensor_msgs</depend>

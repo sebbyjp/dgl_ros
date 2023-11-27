@@ -1,7 +1,7 @@
 // #include <rclcpp/rclcpp.hpp>
 // #include <functional>
 #include <dgl_ros/observer.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
+// #include <sensor_msgs/msg/point_cloud2.hpp>
 // // Questions
 // // Should action_producer request observations to begin being made?
 // // OR should obs be made continuously
@@ -31,5 +31,5 @@ namespace dgl
 //   };
 //   src_sub_ = this->create_subscription<SrcT>(this->get_parameter("src_topic").as_string(), 10, callback);
 // }
-template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
+// template class Observer<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2>::Observer;
 }  // namespace dgl

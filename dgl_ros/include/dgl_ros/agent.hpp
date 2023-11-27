@@ -1,3 +1,8 @@
+// Copyright (c) 2023 Sebastian Peralta
+// 
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 #pragma once
 #include <rclcpp/rclcpp.hpp>
 #include <dgl_ros/actor.hpp>
@@ -6,10 +11,24 @@
 namespace dgl
 {
 
+/**
+ * @brief This class is responsible for recieving observations and generatoring
+ * actions.
+ * 
+ * @tparam ObsT 
+ * @tparam ActionT 
+ * @tparam SrcTs 
+ */
 template <typename ObsT, typename ActionT, typename... SrcTs>
 class Agent : public rclcpp::Node
 {
 public:
+  /**
+   * @brief Construct a new Agent object
+   * 
+   * @param options 
+   * @param src_topics Source topics to subscribe to and generate observations from.
+   */
   Agent(rclcpp::NodeOptions& options, const std::array<std::string, sizeof...(SrcTs)>& src_topics)
     : Node("agent", options)
 
@@ -27,8 +46,20 @@ public:
     exec.spin();
   }
 
+  /**
+   * @brief Function that generates an action from an observer.
+   * 
+   * @param observer  Observer that can be called multiple times to generate observations.
+   * @return ActionT::Feedback::SharedPtr 
+   */
   virtual typename ActionT::Feedback::SharedPtr actionFromObs(std::shared_ptr<Observer<ObsT, SrcTs...>> observer) = 0;
 
+  /**
+   * @brief Function that generates an observation from a set of source messages.
+   * 
+   * @param srcs Source messages to generate observation from.
+   * @return std::unique_ptr<ObsT> 
+   */
   virtual std::unique_ptr<ObsT> obsFromSrcs(std::shared_ptr<SrcTs>... srcs) = 0;
 
 protected:

@@ -1,6 +1,9 @@
-// Conversions from vector to pose
+// Copyright (c) 2023 Sebastian Peralta
+// 
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
-#include <vector>
+#pragma once
 #include <Eigen/Dense>
 #include <geometry_msgs/msg/pose.hpp>
 

@@ -2,7 +2,7 @@
 // ROS
 #include <dgl_ros/actor.hpp>
 // #include <rclcpp_action/rclcpp_action.hpp>
-#include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
+// #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 namespace dgl {
 // using std::placeholders::_1;
 // using std::placeholders::_2;
@@ -46,5 +46,5 @@ namespace dgl {
 //   std::thread{ publish_grasps, goal_handle }.detach();
 // }
 
-template class Actor< dgl_ros_interfaces::action::SampleGraspPoses>::Actor;
+// template class Actor< dgl_ros_interfaces::action::SampleGraspPoses>::Actor;
 } // namespace dgl
