@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+    <name>dgl_ros_models</name>
+    <version>0.0.1</version>
+    <description>Deep Grasp Models in ros2 </description>
+    <maintainer email="peraltasjp@gmail.com">Sebastian Peralta </maintainer>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>rclcpp</depend>
+    <depend>geometry_msgs</depend>
+    <depend>dgl_ros</depend>
+    <depend>dgl_ros_interfaces</depend>
+
+    <test_depend>ament_cmake_pytest</test_depend>
+    <test_depend>ament_lint_auto</test_depend>
+    <test_depend>ament_lint_common</test_depend>
+    <test_depend>launch</test_depend>
+    <test_depend>launch_testing</test_depend>
+    <test_depend>launch_testing_ros</test_depend>
+    <test_depend>launch_testing_ament_cmake</test_depend>
+    <test_depend>rmw_implementation_cmake</test_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>
