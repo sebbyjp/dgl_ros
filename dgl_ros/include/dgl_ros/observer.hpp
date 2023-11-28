@@ -1,5 +1,5 @@
 // Copyright (c) 2023 Sebastian Peralta
-// 
+//
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
@@ -15,111 +15,124 @@ namespace dgl
 /**
  * @brief Observer subscribes to src_topics and stores
  *  a buffer of observations.
- * 
- * @tparam ObsT 
- * @tparam SrcTs 
+ *
+ * @tparam ObsT
+ * @tparam SrcTs
  */
 template <typename ObsT, typename... SrcTs>
 class Observer : public rclcpp::Node
 {
 public:
- /**
-  * @brief  Observer subscribes to src_topics and stores
+  /**
+   * @brief  Observer subscribes to src_topics and stores
    *  a buffer of observations.
-  * 
-  * @param options 
-  * @param obs_from_srcs Function that creates an Observation from Source messages.
-  * @param src_topics List of topics to subscribe to.
-  * @param buffer_size 
-  */
+   *
+   * @param options
+   * @param obs_from_srcs Function that creates an Observation from Source messages.
+   * @param src_topics List of topics to subscribe to.
+   * @param buffer_size
+   */
   Observer(const rclcpp::NodeOptions& options,
-           const std::function<std::unique_ptr<ObsT>(std::shared_ptr<SrcTs>...)> obs_from_srcs,
-           const std::array<std::string, sizeof...(SrcTs)>& src_topics, size_t buffer_size = 10)
-    : Node("observer", options), buffer_size_(buffer_size)
+           const std::function<std::unique_ptr<ObsT>(std::shared_ptr<SrcTs>...)> obs_from_srcs_function)
+    : Node("observer", options)
+    , obs_from_srcs_function_(obs_from_srcs_function)
+    , last_src_msgs_recieved_(std::make_tuple(std::make_shared<SrcTs>()...))
   {
-    int i = 0;
-    for (const auto& src_topic : src_topics)
+    // Initialize and seet parameters, allowing for overrides.
+    std::array<std::string, sizeof...(SrcTs)> src_topics;
+    for (int i = 0; i < sizeof...(SrcTs); i++)
     {
-      this->declare_parameter("src_topic" + std::to_string(i), src_topic);
-      i++;
+      this->declare_parameter("src_topic" + std::to_string(i), "rgbd_camera/points");
+      src_topics[i] = this->get_parameter("src_topic" + std::to_string(i)).as_string();
+      recieved_first_src_msgs_[i] = false;
     }
-    for (auto& b : recieved_first_srcs_)
-    {
-      b = false;
-    }
-    this->declare_parameter("publish", false);
+    this->declare_parameter("publish_observation", true);
+    this->declare_parameter("cache_size", 10);
 
-    obs_from_srcs_ = obs_from_srcs;
-    src_msgs_ = std::make_tuple(std::make_shared<SrcTs>()...);
-  
-    auto callback_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-    src_subs_ = dgl::util::addSubscriptions(this, src_topics, callback_group, src_msgs_, recieved_first_srcs_,
-                                                std::index_sequence_for<SrcTs...>{});
+    auto src_sub_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    src_subs_ = dgl::util::addSubscriptions(this, src_topics, src_sub_group, last_src_msgs_recieved_,
+                                            recieved_first_src_msgs_, std::index_sequence_for<SrcTs...>{});
+
     // For debugging.
-    auto pub_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-    rclcpp::PublisherOptions options_pub;
-    options_pub.callback_group = pub_callback_group;
-    obs_pub_ = this->create_publisher<ObsT>("observation", 10, options_pub); 
+    auto pub_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    rclcpp::PublisherOptions pub_options;
+    pub_options.callback_group = pub_group;
+    obs_pub_ = this->create_publisher<ObsT>("observation", 10, pub_options);
+    pub_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), [this]() -> void {
+      if (observation_cache_.size() > 0 && this->get_parameter("publish_observation").as_bool())
+      {
+        ObsT obs = *observation_cache_.back();
+        try
+        {
+          obs.header.stamp = this->now();
+        }
+        catch (std::exception& e)
+        {
+          RCLCPP_WARN(this->get_logger(), "Tried to update observation timestamp. Exception caught: %s", e.what());
+        }
+        obs_pub_->publish(obs);
+      }
+    });
   }
 
   /**
    * @brief Creates an observation from the last set of source messages and returns
    * the index of the observation in the buffer and a pointer to the observation.
-   * 
-   * @return std::pair<size_t, ObsT*> 
+   *
+   * @return std::pair<size_t, ObsT*>
    */
   std::pair<size_t, ObsT*> observe()
   {
-    while (!recieved_first_srcs())
+    while (!recieved_first_src_msgs())
     {
-      RCLCPP_DEBUG_ONCE(this->get_logger(), "Observer is waiting for observation.");
+      RCLCPP_INFO_ONCE(this->get_logger(), "Observer is waiting for observation.");
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    auto observation = std::apply(obs_from_srcs_function_, last_src_msgs_recieved_);
     std::unique_lock lock(obs_mutex_);
-    if (observations_.size() == buffer_size_)
+    if (observation_cache_.size() == this->get_parameter("cache_size").as_int())
     {
-      observations_.pop_front();
+      observation_cache_.pop_front();
       num_pops_++;
     }
-    observations_.push_back(std::move(std::apply(obs_from_srcs_, src_msgs_)));
-
-    if (this->get_parameter("publish").as_bool())
-    {
-      obs_pub_->publish(*observations_.back());
-    }
-    return std::pair(observations_.size() - 1, observations_.back().get());
+    observation_cache_.push_back(std::move(observation));
+    return std::pair(observation_cache_.size() - 1, observation_cache_.back().get());
   }
 
   /**
    * @brief Returns a pointer to the observation at index id or nullptr if id is out of range.
-   * 
-   * @param id 
-   * @return ObsT* 
+   *
+   * @param id
+   * @return ObsT*
    */
   ObsT* get(int id)
   {
     // Subtract by num_pops_ to account for id's changing.
-    if (id - num_pops_ < 0 || id - num_pops_ >= static_cast<int>(observations_.size()))
+    if (id - num_pops_ < 0 || id - num_pops_ >= static_cast<int>(observation_cache_.size()))
     {
       return nullptr;
     }
-    return observations_.at(id).get();
+    return observation_cache_.at(id).get();
   }
 
 private:
-  bool recieved_first_srcs()
+  bool recieved_first_src_msgs()
   {
-    return std::all_of(recieved_first_srcs_.begin(), recieved_first_srcs_.end(), [](bool b) { return b; });
+    return std::all_of(recieved_first_src_msgs_.begin(), recieved_first_src_msgs_.end(), [](bool b) { return b; });
   }
-  std::array<bool, sizeof...(SrcTs)> recieved_first_srcs_;
-  typename rclcpp::Publisher<ObsT>::SharedPtr obs_pub_;
+
   std::tuple<std::shared_ptr<rclcpp::Subscription<SrcTs>>...> src_subs_;
-  std::tuple<std::shared_ptr<SrcTs>...> src_msgs_; // The last set of src messages revieved.
+  std::tuple<std::shared_ptr<SrcTs>...> last_src_msgs_recieved_;  // The last set of src messages revieved.
+  std::array<bool, sizeof...(SrcTs)> recieved_first_src_msgs_;    // True if the first message has been recieved.
+
+  std::function<std::unique_ptr<ObsT>(std::shared_ptr<SrcTs>...)> obs_from_srcs_function_;
   mutable std::shared_mutex obs_mutex_;
-  std::deque<std::unique_ptr<ObsT>> observations_ RCPPUTILS_TSA_GUARDED_BY(obs_mutex_);
+  // List of last `cache_size` observations made in reverse chronological order.
+  std::deque<std::unique_ptr<ObsT>> observation_cache_ RCPPUTILS_TSA_GUARDED_BY(obs_mutex_);
   int num_pops_ = 0;
-  size_t buffer_size_;
-  std::function<std::unique_ptr<ObsT>(std::shared_ptr<SrcTs>...)> obs_from_srcs_;
+
+  typename rclcpp::Publisher<ObsT>::SharedPtr obs_pub_;
+  rclcpp::TimerBase::SharedPtr pub_timer_;
 };
 
 }  // namespace dgl

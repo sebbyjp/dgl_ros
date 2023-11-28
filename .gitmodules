@@ -1,0 +1,3 @@
+[submodule "dgl_ros_models/pybind11"]
+	path = dgl_ros_models/pybind11
+	url = https://github.com/pybind/pybind11.git

@@ -1,5 +1,5 @@
 // Copyright (c) 2023 Sebastian Peralta
-// 
+//
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
@@ -10,7 +10,7 @@
 #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <gpd/grasp_detector.h>
-
+#include <dgl_ros/util/tf.hpp>
 namespace dgl_models
 {
 
@@ -27,9 +27,10 @@ public:
   actionFromObs(std::shared_ptr<GpdObserver> observer) override;
 
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
-
+  void run() override;
 private:
   std::unique_ptr<gpd::GraspDetector> gpd_grasp_detector_;
-  Eigen::Isometry3d transform_base_opt_;
+  Eigen::Isometry3d tf_world_src_;
+  std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
 };
 }  // namespace dgl_models

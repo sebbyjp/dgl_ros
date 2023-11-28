@@ -16,13 +16,21 @@ typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudRGBA;
 namespace dgl_models
 {
 
-Gpd::Gpd(rclcpp::NodeOptions& options) : GpdAgent(options, { options.parameter_overrides()[0].as_string() })
+Gpd::Gpd(rclcpp::NodeOptions& options) : GpdAgent(options)
 {
-  this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros/dgl_ros_models/config/gpd_config.yaml");
-  const Eigen::Isometry3d trans_base_cam = dgl::util::isometryFromXYZRPY({ 0.084, 0.017, 0.522, 0, 0.8, 0 });
-  const Eigen::Isometry3d transform_cam_opt = dgl::util::isometryFromXYZRPY({ 0, 0, 0, 0, 0, 0 });
-  transform_base_opt_ = trans_base_cam * transform_cam_opt;
+
+  tf_lookup_ = std::make_unique<dgl::util::TransformLookup>(this);
+  this->declare_parameter("tf_timeout_seconds", 10);
+ this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros_models/config/gpd_config.yaml");
   gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>(this->get_parameter("gpd_config_path").as_string());
+}
+
+void Gpd::run() {
+   tf_lookup_->get_tf_isometry(this->get_parameter("world").as_string(),
+                            this->get_parameter("src_frame0").as_string(), 
+                            this->get_parameter("tf_timeout_seconds").as_int(),
+                            tf_world_src_);
+  GpdAgent::run();
 }
 
 SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObserver> observer)
@@ -37,7 +45,7 @@ SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObse
   pcl::copyPointCloud(cloud, *grasp_cloud);
   Eigen::Matrix3Xd camera_view_point(3, 1);
   gpd::util::Cloud gpd_cloud(grasp_cloud, 0, camera_view_point);
-  gpd_grasp_detector_->preprocessPointCloud(gpd_cloud, transform_base_opt_);
+  gpd_grasp_detector_->preprocessPointCloud(gpd_cloud, tf_world_src_);
 
   std::vector<std::unique_ptr<gpd::candidate::Hand>> grasps;  // detect grasp poses                   // detect grasps
                                                               // in the point cloud
@@ -54,7 +62,7 @@ SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObse
     const Eigen::Isometry3d transform_opt_grasp =
         Eigen::Translation3d(grasps.at(id)->getPosition()) * Eigen::Quaterniond(grasps.at(id)->getOrientation());
 
-    const Eigen::Isometry3d transform_base_grasp = transform_base_opt_ * transform_opt_grasp;
+    const Eigen::Isometry3d transform_base_grasp = tf_world_src_ * transform_opt_grasp;
     const Eigen::Vector3d trans = transform_base_grasp.translation();
     const Eigen::Quaterniond rot(transform_base_grasp.rotation());
 
@@ -98,10 +106,7 @@ std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(std::shared_ptr<PointCloud2> msg)
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::NodeOptions options;
-  // TODO(speralta): Read in src topics more reliably.
-  options.parameter_overrides(
-      { { "src_topic0", "rgbd_camera/points" }, { "publish", true }, { "action_topic", "sample_grasp_poses" } });
+  rclcpp::NodeOptions options;;
   options.allow_undeclared_parameters(true);
   dgl_models::Gpd server(options);
   server.run();

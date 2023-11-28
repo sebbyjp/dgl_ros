@@ -1,5 +1,5 @@
 // Copyright (c) 2023 Sebastian Peralta
-// 
+//
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
@@ -9,7 +9,7 @@
 #include <dgl_ros/agent.hpp>
 #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-
+#include <dgl_ros/util/tf.hpp>
 namespace dgl_models
 {
 
@@ -27,7 +27,10 @@ public:
 
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
 
+  void run() override;
+
 private:
-  Eigen::Isometry3d transform_base_opt_;
+  Eigen::Affine3d tf_world_src_;
+  std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
 };
 }  // namespace dgl_models
