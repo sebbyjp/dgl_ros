@@ -18,19 +18,13 @@ namespace dgl_models
 
 Gpd::Gpd(rclcpp::NodeOptions& options) : GpdAgent(options)
 {
-
   tf_lookup_ = std::make_unique<dgl::util::TransformLookup>(this);
   this->declare_parameter("tf_timeout_seconds", 10);
- this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros_models/config/gpd_config.yaml");
+  this->declare_parameter("gpd_config_path", "/simply_ws/src/dgl_ros/dgl_ros_models/config/gpd_config.yaml");
   gpd_grasp_detector_ = std::make_unique<gpd::GraspDetector>(this->get_parameter("gpd_config_path").as_string());
-}
-
-void Gpd::run() {
-   tf_lookup_->get_tf_isometry(this->get_parameter("world").as_string(),
-                            this->get_parameter("src_frame0").as_string(), 
-                            this->get_parameter("tf_timeout_seconds").as_int(),
-                            tf_world_src_);
-  GpdAgent::run();
+  tf_lookup_->get_tf_isometry(this->get_parameter("world_frame").as_string(),
+                              this->get_parameter("src_frame0").as_string(),
+                              this->get_parameter("tf_timeout_seconds").as_int(), tf_world_src_);
 }
 
 SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObserver> observer)
@@ -38,7 +32,7 @@ SampleGraspPoses::Feedback::SharedPtr Gpd::actionFromObs(std::shared_ptr<GpdObse
   auto [id, msg] = observer->observe();
   // Convert to PCL.
   PointCloudRGB cloud;
-  pcl::moveFromROSMsg(*msg, cloud);
+  pcl::fromROSMsg(*msg, cloud);
 
   // Convert to GPD.
   auto grasp_cloud = std::make_shared<PointCloudRGBA>();
@@ -106,7 +100,8 @@ std::unique_ptr<PointCloud2> Gpd::obsFromSrcs(std::shared_ptr<PointCloud2> msg)
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::NodeOptions options;;
+  rclcpp::NodeOptions options;
+  ;
   options.allow_undeclared_parameters(true);
   dgl_models::Gpd server(options);
   server.run();

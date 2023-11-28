@@ -81,6 +81,7 @@ public:
    *
    * @return std::pair<size_t, ObsT*>
    */
+  // TODO(speralta): Return copy instead of pointer since may be deleted by pops.
   std::pair<size_t, ObsT*> observe()
   {
     while (!recieved_first_src_msgs())
@@ -105,11 +106,13 @@ public:
    * @param id
    * @return ObsT*
    */
+  // TODO(speralta): Return bool and have output param since object may be deleted by pops.
   ObsT* get(int id)
   {
     // Subtract by num_pops_ to account for id's changing.
     if (id - num_pops_ < 0 || id - num_pops_ >= static_cast<int>(observation_cache_.size()))
     {
+      RCLCPP_WARN(this->get_logger(), "Observation id %d is out of range.", id);
       return nullptr;
     }
     return observation_cache_.at(id).get();

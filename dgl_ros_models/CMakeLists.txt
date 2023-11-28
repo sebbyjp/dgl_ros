@@ -13,6 +13,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+cmake_policy(SET CMP0074 NEW)
 # Use minimum-size optimization for pybind11 bindings
 add_compile_options("-Os")
 

@@ -27,7 +27,6 @@ public:
   actionFromObs(std::shared_ptr<GpdObserver> observer) override;
 
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
-  void run() override;
 private:
   std::unique_ptr<gpd::GraspDetector> gpd_grasp_detector_;
   Eigen::Isometry3d tf_world_src_;

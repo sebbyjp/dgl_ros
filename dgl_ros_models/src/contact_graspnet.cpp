@@ -19,8 +19,7 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 namespace dgl_models
 {
 
-ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options)
-  : CgnAgent(options)
+ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options) : CgnAgent(options)
 {
   tf_lookup_ = std::make_unique<dgl::util::TransformLookup>(this);
   this->declare_parameter("tf_timeout_seconds", 5);
@@ -44,27 +43,27 @@ SampleGraspPoses::Feedback::SharedPtr ContactGraspnet::actionFromObs(std::shared
   RCLCPP_WARN_STREAM(this->get_logger(), "cloud size" << cloud.points.size());
   std::vector<geometry_msgs::msg::PoseStamped> grasps;  // detect grasp poses
                                                         // TODO(speralta): read in onnx module and run inference
-  // Create a feedback message
-  namespace py = pybind11;
-  py::scoped_interpreter guard{};
-  py::module sys = py::module::import("sys");
-  sys.attr("path").attr("append")("/simply_ws/src/cgn_pytorch");
-  py::object cgn_from_pretrained = py::module::import("cgn_pytorch").attr("from_pretrained");
-  py::tuple cgn_tup = cgn_from_pretrained();
-  py::object cgn_infer = py::module::import("cgn_pytorch").attr("inference");
-  py::tuple result = cgn_infer(cgn_tup[0], py::cast(cloud_points));
-  py::list grasp_list = result[0];
-  py::list confidence_list = result[1];
-  std::vector<unsigned int> grasp_ids;
-  for (unsigned int i = 0; i < grasp_list.size(); i++)
-  {
-    grasp_ids.push_back(i);
-    geometry_msgs::msg::PoseStamped grasp;
-    grasp.header.frame_id = "world";
-    RCLCPP_WARN_STREAM(this->get_logger(), "Grasp " << i << " " << grasp_list[i].cast<Eigen::Matrix4d>());
-    grasp.pose = tf2::toMsg(Eigen::Affine3d(grasp_list[i].cast<Eigen::Matrix4d>()));
-    grasps.push_back(grasp);
-  }
+  // // Create a feedback message
+  // namespace py = pybind11;
+  // py::scoped_interpreter guard{};
+  // py::module sys = py::module::import("sys");
+  // sys.attr("path").attr("append")("/simply_ws/src/cgn_pytorch");
+  // py::object cgn_from_pretrained = py::module::import("cgn_pytorch").attr("from_pretrained");
+  // py::tuple cgn_tup = cgn_from_pretrained();
+  // py::object cgn_infer = py::module::import("cgn_pytorch").attr("inference");
+  // py::tuple result = cgn_infer(cgn_tup[0], py::cast(cloud_points));
+  // py::list grasp_list = result[0];
+  // py::list confidence_list = result[1];
+  // std::vector<unsigned int> grasp_ids;
+  // for (unsigned int i = 0; i < grasp_list.size(); i++)
+  // {
+  //   grasp_ids.push_back(i);
+  //   geometry_msgs::msg::PoseStamped grasp;
+  //   grasp.header.frame_id = "world";
+  //   RCLCPP_WARN_STREAM(this->get_logger(), "Grasp " << i << " " << grasp_list[i].cast<Eigen::Matrix4d>());
+  //   grasp.pose = tf2::toMsg(Eigen::Affine3d(grasp_list[i].cast<Eigen::Matrix4d>()));
+  //   grasps.push_back(grasp);
+  // }
   auto feedback = std::make_shared<SampleGraspPoses::Feedback>();
   // for (auto id : grasp_ids)
   // {
