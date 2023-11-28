@@ -14,8 +14,9 @@
     <depend>dgl_ros</depend>
     <depend>dgl_ros_interfaces</depend>
     <depend>tf2_ros</depend>
-    <depend>tf2_geometry_msgs</depend>
     <depend>tf2_eigen</depend>
+    <depend>pybind11</depend>
+
     <test_depend>ament_cmake_pytest</test_depend>
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>

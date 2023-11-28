@@ -14,7 +14,7 @@ namespace dgl
 {
 namespace util
 {
-TransformLookup::TransformLookup(rclcpp::Node* node, rclcpp::CallbackGroup::SharedPtr cb_group) : node_(node)
+TransformLookup::TransformLookup(rclcpp::Node* node) : node_(node)
 {
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);

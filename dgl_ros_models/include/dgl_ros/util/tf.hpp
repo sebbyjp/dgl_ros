@@ -17,10 +17,13 @@ namespace util
 class TransformLookup
 {
 public:
-  TransformLookup(rclcpp::Node* node, rclcpp::CallbackGroup::SharedPtr cb_group=nullptr);
- bool get_tf_msg(const std::string& target_frame, const std::string& src_frame, int timeout, geometry_msgs::msg::TransformStamped& tf_out);
-  bool get_tf_isometry(const std::string& target_frame, const std::string& src_frame, int timeout, Eigen::Isometry3d& tf_out);
-  bool get_tf_affine(const std::string& target_frame, const std::string& src_frame, int timeout, Eigen::Affine3d& tf_out);
+  TransformLookup(rclcpp::Node* node);
+  bool get_tf_msg(const std::string& target_frame, const std::string& src_frame, int timeout,
+                  geometry_msgs::msg::TransformStamped& tf_out);
+  bool get_tf_isometry(const std::string& target_frame, const std::string& src_frame, int timeout,
+                       Eigen::Isometry3d& tf_out);
+  bool get_tf_affine(const std::string& target_frame, const std::string& src_frame, int timeout,
+                     Eigen::Affine3d& tf_out);
 
 private:
   rclcpp::Node* node_;

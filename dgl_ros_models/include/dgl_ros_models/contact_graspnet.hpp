@@ -27,8 +27,6 @@ public:
 
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
 
-  void run() override;
-
 private:
   Eigen::Affine3d tf_world_src_;
   std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
