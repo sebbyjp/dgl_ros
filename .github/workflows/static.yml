@@ -4,7 +4,7 @@ name: Deploy static content to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
+    branches: ["main, sphinx"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,6 +32,10 @@ jobs:
         with:
           submodules: true  
           fetch-depth: 0  
+      - name: Sphinx
+        uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "docs/sphinx"
       - name: Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:

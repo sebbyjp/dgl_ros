@@ -84,12 +84,17 @@ public:
   // TODO(speralta): Return copy instead of pointer since may be deleted by pops.
   std::pair<size_t, ObsT*> observe()
   {
-    while (!recieved_first_src_msgs())
+    while (!recieved_first_src_msgs() && rclcpp::ok())
     {
       RCLCPP_INFO_ONCE(this->get_logger(), "Observer is waiting for observation.");
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    if (!rclcpp::ok())
+    {
+      RCLCPP_ERROR(this->get_logger(), "Observer is shutting down.");
+      return std::pair(-1, nullptr);
     }
     auto observation = std::apply(obs_from_srcs_function_, last_src_msgs_recieved_);
+    RCLCPP_INFO(this->get_logger(), "Observation made.");
     std::unique_lock lock(obs_mutex_);
     if (observation_cache_.size() == this->get_parameter("cache_size").as_int())
     {
