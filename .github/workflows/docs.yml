@@ -23,41 +23,53 @@ concurrency:
 
 jobs:
   sphinx:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name : Sphinx
         uses: ammaraskar/sphinx-action@master
-      - name: Doxygen
-        uses: mattnotmitt/doxygen-action@v1.9.5
-        with:
-            working-directory: './'
-            doxyfile-path: 'docs/Doxyfile'
-  doxygen:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true  
-          fetch-depth: 0  
-      - name: Sphinx
-        uses: ammaraskar/sphinx-action@master
-        with:
-          docs-folder: "docs/sphinx"
-      - name: Doxygen
-        uses: mattnotmitt/doxygen-action@v1.9.5
-        with:
-            working-directory: './'
-            doxyfile-path: 'docs/Doxyfile'
       - name: Setup Pages
         uses: actions/configure-pages@v3
+        env:
+          url: ${{ steps.sphinx.outputs.page_url }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload entire repository
-          path: 'docs/html'
+          path: 'docs/sphinx/html'
+        env:
+          url: ${{ steps.sphinx.outputs.page_url }}
       - name: Deploy to GitHub Pages
-        id: deployment
+        id: sphinx
         uses: actions/deploy-pages@v2
+        env:
+          url: ${{ steps.sphinx.outputs.page_url }}
+  # doxygen:
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true  
+  #         fetch-depth: 0  
+  #     - name: Sphinx
+  #       uses: ammaraskar/sphinx-action@master
+  #       with:
+  #         docs-folder: "docs/sphinx"
+  #     - name: Doxygen
+  #       uses: mattnotmitt/doxygen-action@v1.9.5
+  #       with:
+  #           working-directory: './'
+  #           doxyfile-path: 'docs/Doxyfile'
+  #     - name: Setup Pages
+  #       uses: actions/configure-pages@v3
+  #     - name: Upload artifact
+  #       uses: actions/upload-pages-artifact@v2
+  #       with:
+  #         # Upload entire repository
+  #         path: 'docs/html'
+  #     - name: Deploy to GitHub Pages
+  #       id: doxygen
+  #       uses: actions/deploy-pages@v2
