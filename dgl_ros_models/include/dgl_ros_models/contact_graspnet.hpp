@@ -30,5 +30,6 @@ public:
 private:
   Eigen::Affine3d tf_world_src_;
   std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
+  Eigen::Vector4f centroid_;
 };
 }  // namespace dgl_models

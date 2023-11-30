@@ -30,7 +30,7 @@ bool TransformLookup::get_tf_msg(const std::string& target_frame, const std::str
   // and send velocity commands for turtle2 to reach src_frame
   try
   {
-    tf_out = tf_buffer_->lookupTransform(target_frame, src_frame, node_->now(),rclcpp::Duration(timeout, 0));
+    tf_out = tf_buffer_->lookupTransform(target_frame, src_frame, rclcpp::Time(0), rclcpp::Duration(timeout,0));
     return true;
   }
   catch (const tf2::TransformException& ex)
@@ -39,40 +39,6 @@ bool TransformLookup::get_tf_msg(const std::string& target_frame, const std::str
                 ex.what());
     return false;
   }
-
-  // geometry_msgs::msg::Twist msg;
-
-  //  auto tf_future = tf_buffer_->waitForTransform(src_frame, target_frame, node_->now(), rclcpp::Duration(5, 0),
-  //                               [&tf_stamped, this](const tf2_ros::TransformStampedFuture& tf) {
-  //                                 RCLCPP_WARN(this->node_->get_logger(), "success transform lookup");
-  //                                 tf_stamped = tf.get();
-  //                               });
-  //   while (rclcpp::ok() && tf_future.wait_for(std::chrono::seconds(5)) != std::future_status::ready)
-  //   {
-  //     RCLCPP_WARN_ONCE(this->node_->get_logger(), "waiting for transform lookup");
-  //   }
-  //   if (tf_future.valid())
-  //   {
-  //     RCLCPP_WARN_ONCE(this->node_->get_logger(), "success transform lookup");
-  //   }
-  //   else
-  //   {
-  //     RCLCPP_WARN_ONCE(this->node_->get_logger(), "failed transform lookup");
-  //   }
-
-  // }
-  // catch (tf2::TransformException& ex)
-  // {
-  //   RCLCPP_ERROR(node_->get_logger(), "TF FAILED!!\n");
-  //   RCLCPP_ERROR(node_->get_logger(), "%s", ex.what());
-  // }
-  // RCLCPP_WARN_STREAM(node_->get_logger(),
-  //                    "TF found: " << tf_stamped.transform.translation.x << " " << tf_stamped.transform.translation.y
-  //                                 << " " << tf_stamped.transform.translation.z << " " <<
-  //                                 tf_stamped.transform.rotation.x
-  //                                 << " " << tf_stamped.transform.rotation.y << " " << tf_stamped.transform.rotation.z
-  // //                                 << " " << tf_stamped.transform.rotation.w);
-  // return true;
 }  
 
 bool TransformLookup::get_tf_isometry(const std::string& target_frame, const std::string& src_frame,
