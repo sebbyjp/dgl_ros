@@ -3,7 +3,7 @@ name: Code Coverage
 on:
   push:
     branches:
-      - main  # Set a branch name to trigger deployment
+      - main
   pull_request:
 
 jobs:
