@@ -22,7 +22,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  sphinx:
+    steps:
+      - uses: actions/checkout@v3
+      - name : Sphinx
+        uses: ammaraskar/sphinx-action@master
+      - name: Doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
+        with:
+            working-directory: './'
+            doxyfile-path: 'docs/Doxyfile'
+  doxygen:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
