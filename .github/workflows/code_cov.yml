@@ -1,0 +1,21 @@
+name: Code Coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    environment:
+      name: code-cov
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          name: code-cov
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
