@@ -10,6 +10,7 @@
 #include <dgl_ros_interfaces/action/sample_grasp_poses.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <dgl_ros/util/tf.hpp>
+#include <rviz_visual_tools/rviz_visual_tools.hpp>
 namespace dgl_models
 {
 
@@ -31,5 +32,6 @@ private:
   Eigen::Affine3d tf_world_src_;
   std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
   Eigen::Vector4f centroid_;
+  rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
 };
 }  // namespace dgl_models

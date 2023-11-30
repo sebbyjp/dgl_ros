@@ -10,5 +10,6 @@ pcd_list, _, obj_mask, mean, cam_pose, _ = arrays[k0], arrays[k1], arrays[k2], a
 pprint(vars(arrays))
 pointcloud = pcd_list[0]
 print(pointcloud.shape)
-grasps, confidence = inference(cgn, pointcloud, threshold=0.5,visualize=True)
-print(grasps)
+grasps, confidence, downsample = inference(cgn, pointcloud, threshold=0.5,visualize=True)
+print(grasps.shape)
+print("Found {} grasps".format(grasps.shape[0]))
