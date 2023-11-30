@@ -1,4 +1,7 @@
 # Deep Grasp Library for ROS2
+
+[![Code Coverage](https://codecov.io/gh/ros-planning/sebbyjp/dgl_ros/branch/main/graph/badge.svg?token=9225d677-c4f2-4607-a9dd-8c22446f13bc)](https://codecov.io/gh/sebbyjp/dgl_ros)
+
 The primary philosophy behind this repo is that a full, deployable, and
 usable AI solution extends beyond the AI model itself. **dgl_ros** is a light-weight C++ library for researchers to package their
 deep grasp models into a ROS node, ready to be run and experimented with by the robotics community. **dgl_ros_models** contains examples of popular deep grasp models such as [GPD](https://github.com/atenpas/gpd) and
