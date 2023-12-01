@@ -29,9 +29,10 @@ public:
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
 
 private:
+  // TODO(speralta): Make new Observation msg with centroid and point cloud.
+  Eigen::Vector4f centroid_;
   Eigen::Affine3d tf_world_src_;
   std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
-  Eigen::Vector4f centroid_;
   rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
 };
 }  // namespace dgl_models
