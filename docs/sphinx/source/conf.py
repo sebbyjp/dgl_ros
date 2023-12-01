@@ -34,6 +34,6 @@ html_static_path = ['_static']
 
 # Breathe Configuration
 breathe_projects = {
-    "dgl_ros": "./docs/xml/",
+    "dgl_ros": "../../xml/",
 }
 breathe_default_project = "dgl_ros"
