@@ -26,8 +26,9 @@ deep grasp models into a ROS node, ready to be run and experimented with by the 
 5. Python bindings
 
 ## Demos in Simulation and Real Life
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/IMWCQYi5f5I/0.jpg)](http://www.youtube.com/watch?v=IMWCQYi5f5I "Stacking Blocks")
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/3lCs003SFpo/0.jpg)](http://www.youtube.com/watch?v=3lCs003SFpo "Making a Salad")
+<iframe width="560" height="315" src="https://www.youtube.com/embed/IMWCQYi5f5I?si=YJP1FD8orh7pKEAY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3lCs003SFpo?si=53M_dCZ1zpryMCQY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 # Requirements
 This has been tested with the following dependencies
