@@ -19,6 +19,7 @@ namespace dgl
  * @tparam ObsT
  * @tparam SrcTs
  */
+
 template <typename ObsT, typename... SrcTs>
 class Observer : public rclcpp::Node
 {
@@ -38,16 +39,11 @@ public:
     , obs_from_srcs_function_(obs_from_srcs_function)
     , last_src_msgs_recieved_(std::make_tuple(std::make_shared<SrcTs>()...))
   {
-    // Initialize and seet parameters, allowing for overrides.
-    std::array<std::string, sizeof...(SrcTs)> src_topics;
+    const std::array<std::string, sizeof...(SrcTs)> src_topics = declare_params();
     for (int i = 0; i < sizeof...(SrcTs); i++)
     {
-      this->declare_parameter("src_topic" + std::to_string(i), "rgbd_camera/points");
-      src_topics[i] = this->get_parameter("src_topic" + std::to_string(i)).as_string();
       recieved_first_src_msgs_[i] = false;
     }
-    this->declare_parameter("publish_observation", true);
-    this->declare_parameter("cache_size", 10);
 
     auto src_sub_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
     src_subs_ = dgl::util::addSubscriptions(this, src_topics, src_sub_group, last_src_msgs_recieved_,
@@ -75,12 +71,6 @@ public:
     });
   }
 
-  /**
-   * @brief Creates an observation from the last set of source messages and returns
-   * the index of the observation in the buffer and a pointer to the observation.
-   *
-   * @return std::pair<size_t, ObsT*>
-   */
   // TODO(speralta): Return copy instead of pointer since may be deleted by pops.
   std::pair<size_t, ObsT*> observe()
   {
@@ -99,14 +89,13 @@ public:
     observation_cache_.push_back(std::move(observation));
     return std::pair(observation_cache_.size() - 1, observation_cache_.back().get());
   }
-
   /**
-   * @brief Returns a pointer to the observation at index id or nullptr if id is out of range.
+   * @brief
    *
    * @param id
    * @return ObsT*
    */
-  // TODO(speralta): Return bool and have output param since object may be deleted by pops.
+  // TODO(speralta): Return bool and pass in object by reference since may be deleted by pops.
   ObsT* get(int id)
   {
     // Subtract by num_pops_ to account for id's changing.
@@ -119,6 +108,32 @@ public:
   }
 
 private:
+  /**
+   * @brief Declare src0_topic ... srcN_topic,
+   * publish_observation, and cache_size parameters.
+   *
+   * @return std::array<std::string, sizeof...(SrcTs)> source topics
+   */
+  std::array<std::string, sizeof...(SrcTs)> declare_params()
+  {
+    // Initialize and seet parameters, allowing for overrides.
+    std::array<std::string, sizeof...(SrcTs)> src_topics;
+    for (int i = 0; i < sizeof...(SrcTs); i++)
+    {
+      this->declare_parameter("src_topic" + std::to_string(i), "rgbd_camera/points");
+      src_topics[i] = this->get_parameter("src_topic" + std::to_string(i)).as_string();
+    }
+    this->declare_parameter("publish_observation", true);
+    this->declare_parameter("cache_size", 10);
+    return src_topics;
+  }
+
+  /**
+   * @brief Returns true if the first message has been recieved.
+   *
+   * @return true
+   * @return false
+   */
   bool recieved_first_src_msgs()
   {
     return std::all_of(recieved_first_src_msgs_.begin(), recieved_first_src_msgs_.end(), [](bool b) { return b; });

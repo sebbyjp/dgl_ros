@@ -1,0 +1,17 @@
+agent:
+  ros__parameters:
+    visualize: true
+    success_threshold: 0.9
+    # Go from CGN gripper frame which is zaxis forward, xaxis right
+    # like the camera frame.
+    grasp_model_tf: [0.0, 0.0, 0.03, -1.571, 0.0, -1.571]
+    max_grasps: 30
+    remove_centroid: true
+    gripper_depth: 0.035
+    gripper_width: 0.035
+/**:
+  ros__parameters:
+    use_sim_time: true
+    publish_observation: true
+    src_frame0: camera_locobot_link
+    world_frame: world

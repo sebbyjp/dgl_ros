@@ -38,11 +38,10 @@ find_package(sensor_msgs REQUIRED)
 
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
-find_package(OpenCV REQUIRED)
 find_library(GPD_LIB NAMES gpd PATHS /usr/local/lib PATH_SUFFIXES lib NO_DEFAULT_PATH)
 
 set(DEPENDENCIES
-    rclcpp geometry_msgs rclcpp_action Eigen3 pcl_ros tf2_ros tf2_eigen rviz_visual_tools)
+    rclcpp geometry_msgs rclcpp_action Eigen3 pcl_ros tf2_ros tf2_eigen rviz_visual_tools Eigen3)
 
 include_directories(
     ${Python_INCLUDE_DIRS}
@@ -98,7 +97,7 @@ ament_export_dependencies(${DEPENDENCIES})
 if(GPD_LIB)
     message(STATUS "Library GPD found in ${GPD_LIB}")
     find_path(GPD_INCLUDE_DIRS NAMES gpd PATHS /usr/local/include NO_DEFAULT_PATH)
-
+    find_package(OpenCV REQUIRED)
     if(GPD_INCLUDE_DIRS)
         message(STATUS "Include directory GPD found in ${GPD_INCLUDE_DIRS}")
         include_directories(

@@ -11,6 +11,8 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <dgl_ros/util/tf.hpp>
 #include <rviz_visual_tools/rviz_visual_tools.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
 namespace dgl_models
 {
 
@@ -28,11 +30,25 @@ public:
 
   sensor_msgs::msg::PointCloud2::UniquePtr obsFromSrcs(std::shared_ptr<sensor_msgs::msg::PointCloud2> msg) override;
 
+  ~ContactGraspnet()
+  {
+    inference_.release();
+    from_pretrained_.release();
+  }
+
 private:
+
   // TODO(speralta): Make new Observation msg with centroid and point cloud.
   Eigen::Vector4f centroid_;
   Eigen::Affine3d tf_world_src_;
   std::unique_ptr<dgl::util::TransformLookup> tf_lookup_;
   rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
+
+  // TODO(speralta): Do not use global pybind vairables.
+  pybind11::function inference_;
+  pybind11::function from_pretrained_;
+
+  pybind11::scoped_interpreter py_guard_;
+  std::unique_ptr<pybind11::gil_scoped_release> mp_gil_release_;
 };
 }  // namespace dgl_models

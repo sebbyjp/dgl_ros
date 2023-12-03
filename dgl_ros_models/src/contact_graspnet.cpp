@@ -14,21 +14,24 @@
 #include <pybind11/embed.h>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <rviz_visual_tools/rviz_visual_tools.hpp>
+#include <Eigen/Geometry>
 using dgl_ros_interfaces::action::SampleGraspPoses;
 using sensor_msgs::msg::PointCloud2;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
+namespace py = pybind11;
 namespace dgl_models
 {
-ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options) : CgnAgent(options)
+ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options) : CgnAgent(options), py_guard_()
 {
   this->declare_parameter("tf_timeout_seconds", 5);
   this->declare_parameter("visualize", false);
   this->declare_parameter("success_threshold", 0.5);
   this->declare_parameter("remove_centroid", true);
   this->declare_parameter("max_grasps", 10);
-  this->declare_parameter<std::vector<double>>("grasp_model_tf", { 0.0, 0.0, 0.0, M_PI_2, -M_PI_2, 0.0 });
-
+  this->declare_parameter("gripper_width", 0.035);
+  this->declare_parameter("gripper_depth", 0.035);
+  this->declare_parameter<std::vector<double>>("grasp_model_tf", { 0.0, 0.0, 0.0, -M_PI_2, 0.0, -M_PI_2 });
   auto tf_timeout_seconds = this->get_parameter("tf_timeout_seconds").as_int();
   auto src_frame0 = this->get_parameter("src_frame0").as_string();
   auto world_frame = this->get_parameter("world_frame").as_string();
@@ -36,18 +39,26 @@ ContactGraspnet::ContactGraspnet(rclcpp::NodeOptions& options) : CgnAgent(option
   visual_tools_ = std::make_shared<rviz_visual_tools::RvizVisualTools>(world_frame, "/rviz_visual_markers", this);
   tf_lookup_ = std::make_unique<dgl::util::TransformLookup>(this);
   tf_lookup_->get_tf_affine(world_frame, src_frame0, tf_timeout_seconds, tf_world_src_);
+
+  // Initialize python interpreter.
+  // TODO(speralta): Do not do this with the pybind11 embedded interpreter.
+  from_pretrained_ = py::module::import("cgn_pytorch").attr("from_pretrained");
+  inference_ = py::module::import("cgn_pytorch").attr("inference");
+  mp_gil_release_ = std::make_unique<py::gil_scoped_release>();
 }
 
 SampleGraspPoses::Feedback::SharedPtr ContactGraspnet::actionFromObs(std::shared_ptr<CgnObserver> observer)
 {
-
-  auto visualize = this->get_parameter("visualize").as_bool();
   auto success_threshold = this->get_parameter("success_threshold").as_double();
+  auto visualize = this->get_parameter("visualize").as_bool();
   auto max_grasps = this->get_parameter("max_grasps").as_int();
+  auto gripper_depth = this->get_parameter("gripper_depth").as_double();
+  auto gripper_width = this->get_parameter("gripper_width").as_double();
+
   auto remove_centroid = this->get_parameter("remove_centroid").as_bool();
   auto world_frame = this->get_parameter("world_frame").as_string();
-  auto grasp_model_tf = dgl::util::isometryFromXYZRPY(
-    this->get_parameter("grasp_model_tf").as_double_array());
+  auto grasp_model_tf = dgl::util::isometryFromXYZRPY(this->get_parameter("grasp_model_tf").as_double_array());
+
   auto [id, msg] = observer->observe();
 
   // Convert to python-accessible representation.
@@ -65,17 +76,10 @@ SampleGraspPoses::Feedback::SharedPtr ContactGraspnet::actionFromObs(std::shared
   std::vector<Eigen::Matrix4d> grasp_list;
   std::vector<double> confidence_list;
   {
-    namespace py = pybind11;
-    py::scoped_interpreter guard{};
-    py::module sys = py::module::import("sys");
-    sys.attr("path").attr("append")("/sim_ws/src/cgn_pytorch");
-
-    py::function from_pretrained = py::module::import("cgn_pytorch").attr("from_pretrained");
-    py::tuple model_tup = from_pretrained();
-
-    py::function inference = py::module::import("cgn_pytorch").attr("inference");
-    py::tuple result = inference(model_tup[0], py::cast(cloud_points), success_threshold, visualize, max_grasps);
-
+    py::gil_scoped_acquire acquire;
+    py::tuple model_tup = from_pretrained_();
+    py::tuple result = inference_(model_tup[0], py::cast(cloud_points), success_threshold, visualize, max_grasps,
+                                  gripper_depth, gripper_width);
     grasp_list = result[0].cast<std::vector<Eigen::Matrix4d>>();
     confidence_list = result[1].cast<std::vector<double>>();
   }
@@ -96,7 +100,7 @@ SampleGraspPoses::Feedback::SharedPtr ContactGraspnet::actionFromObs(std::shared
 
     geometry_msgs::msg::PoseStamped grasp;
     grasp.header.frame_id = world_frame;
-    grasp.pose = tf2::toMsg(grasp_model_tf * cgn_grasp);
+    grasp.pose = tf2::toMsg(cgn_grasp * grasp_model_tf.linear());
 
     if (remove_centroid)
     {
@@ -111,7 +115,6 @@ SampleGraspPoses::Feedback::SharedPtr ContactGraspnet::actionFromObs(std::shared
       visual_tools_->trigger();
     }
   }
-  
 
   auto feedback = std::make_shared<SampleGraspPoses::Feedback>();
   for (auto id : grasp_ids)
