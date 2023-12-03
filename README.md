@@ -32,6 +32,17 @@ This has been tested with the following dependencies
 3. C++ 17
 
 # Example Usage
+
+## Contact Graspnet
+1. Install cgn-pytorch: `pip install cgn-pytorch`
+2. Install pybind11 `sudo apt -y install python-pybind11`
+2. Clone this library into your `$ROS_WS/src` directory: `git clone https://github.com/sebbyjp/dgl_ros.git`
+3. Install dependencies: `rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y`
+4. Build this library from your `$ROS_WS` directory: ` colcon build --symlink-install --base-paths  src/dgl_ros/`
+5. In a terminal, run `ros2 run dgl_ros_models contact_graspnet --ros-args -p src_topic0:=$ROS_TOPIC_GENERATING_POINTCLOUDS -p cgn_config_path:=$PATH_TO_YOUR_CONFIG
+
+
+## GPD
 1. Follow [instructions](https://github.com/atenpas/gpd) to install GPD
 2. Clone this library into your `$ROS_WS/src` directory: `git clone https://github.com/sebbyjp/dgl_ros.git`
 3. Install dependencies: `rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y`
