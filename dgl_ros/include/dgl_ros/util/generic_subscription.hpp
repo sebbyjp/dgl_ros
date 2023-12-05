@@ -39,7 +39,7 @@ std::shared_ptr<rclcpp::Subscription<SrcT>> generic_subscription(rclcpp::Node* n
   };
   rclcpp::SubscriptionOptions options;
   options.callback_group = callback_group;
-  return node->create_subscription<SrcT>(topic, rclcpp::SensorDataQoS(), callback, options);
+  return node->create_subscription<SrcT>(topic, 10, callback, options);
 }
 
 /**

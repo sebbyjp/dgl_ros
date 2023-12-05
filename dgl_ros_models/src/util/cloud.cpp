@@ -51,15 +51,15 @@ void passThroughFilter(const std::vector<double>& xyz_lower, const std::vector<d
 
   pass.setFilterFieldName("x");
   pass.setFilterLimits(xyz_lower.at(0), xyz_upper.at(0));
-  pass.filter(*cloud.get());
+  pass.filter(*cloud);
 
   pass.setFilterFieldName("y");
   pass.setFilterLimits(xyz_lower.at(1), xyz_upper.at(1));
-  pass.filter(*cloud.get());
+  pass.filter(*cloud);
 
   pass.setFilterFieldName("z");
   pass.setFilterLimits(xyz_lower.at(2), xyz_upper.at(2));
-  pass.filter(*cloud.get());
+  pass.filter(*cloud);
 }
 }  // namespace cloud
 }  // namespace util
