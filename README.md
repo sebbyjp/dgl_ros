@@ -25,6 +25,10 @@ deep grasp models into a ROS node, ready to be run and experimented with by the 
 4. Training module to collect and label data from parallel simulations
 5. Python bindings
 
+## Demos in Simulation and Real Life
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/IMWCQYi5f5I/0.jpg)](http://www.youtube.com/watch?v=IMWCQYi5f5I "Stacking Blocks")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/3lCs003SFpo/0.jpg)](http://www.youtube.com/watch?v=3lCs003SFpo "Making a Salad")
+
 # Requirements
 This has been tested with the following dependencies
 1. Ubuntu 20.04
