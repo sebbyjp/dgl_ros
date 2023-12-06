@@ -63,6 +63,6 @@ if __name__ == "__main__":
     #     pprint(vars(arrays))
     #     pointcloud = pcd_list[0]
     #     print(pointcloud.shape)
-    
+
     pointcloud = np.random.rand(100, 3)
     check_inference(pointcloud)

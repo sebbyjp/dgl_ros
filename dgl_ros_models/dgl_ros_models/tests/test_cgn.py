@@ -1,4 +1,3 @@
-# content of test_sysexit.py
 import pytest
 import cgn.cgn_sanity_check as cgn_check
 import numpy as np
