@@ -26,8 +26,8 @@ deep grasp models into a ROS node, ready to be run and experimented with by the 
 5. Python bindings
 
 ## Demos in Simulation and Real Life
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/IMWCQYi5f5I/0.jpg)](http://www.youtube.com/watch?v=IMWCQYi5f5I "Stacking Blocks")
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/3lCs003SFpo/0.jpg)](http://www.youtube.com/watch?v=3lCs003SFpo "Making a Salad")
+[![IMAGE ALT TEXT](docs/assets/block_demo_real.png)](http://www.youtube.com/watch?v=IMWCQYi5f5I "Stacking Blocks")
+[![IMAGE ALT TEXT](docs/assets/salad_demo_sim.png)](http://www.youtube.com/watch?v=3lCs003SFpo "Making a Salad")
 
 # Requirements
 This has been tested with the following dependencies
