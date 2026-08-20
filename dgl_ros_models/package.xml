@@ -13,9 +13,11 @@
     <depend>geometry_msgs</depend>
     <depend>dgl_ros</depend>
     <depend>dgl_ros_interfaces</depend>
+    <depend>pcl_conversions</depend>
+    <depend>pcl_ros</depend>
     <depend>tf2_ros</depend>
     <depend>tf2_eigen</depend>
-    <depend>pybind11</depend>
+    <depend>pybind11-dev</depend>
     <depend>rviz_visual_tools</depend>
 
     <test_depend>ament_cmake_pytest</test_depend>
